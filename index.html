@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MCare | Resumen Ejecutivo de Arquitectura y Gestión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-body: #0a0f1e;
+            --bg-card: #141b2b;
+            --text-primary: #f0f4fc;
+            --text-secondary: #b9c3db;
+            --border: #2a3650;
+            --accent: #00d4ff;
+            --accent-dark: #0099cc;
+            --accent-glow: rgba(0,212,255,0.15);
+            --warning: #ff9f1c;
+            --success: #00f5d4;
+            --danger: #ff4d6d;
+            --shadow-sm: 0 8px 20px rgba(0,0,0,0.3);
+            --shadow-md: 0 15px 35px rgba(0,0,0,0.4);
+            --code-bg: #0f1622;
+        }
+        body {
+            background: var(--bg-body);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border-radius: 1.75rem;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .gradient-header {
+            background: linear-gradient(135deg, #0f1a2f, #1a2a45);
+            border-radius: 1.75rem;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .gradient-header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .badge-white {
+            background: rgba(0,212,255,0.15);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        h2 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: 1.5rem 0 1.2rem 0;
+            background: linear-gradient(120deg, var(--accent), #fff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+            padding-right: 1rem; /* añadido para consistencia horizontal */
+        }
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 1.8rem 0 0.8rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        p, li {
+            text-align: justify;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        strong {
+            color: var(--text-primary);
+        }
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .grid-2, .grid-3, .grid-4 {
+            display: grid;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        
+        .stat-card {
+            background: var(--code-bg);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .stat-card:hover { border-color: var(--accent); }
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            background: var(--bg-card);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: var(--code-bg);
+            font-weight: 700;
+            color: var(--accent);
+        }
+        tr:nth-child(even) {
+            background: rgba(255,255,255,0.02);
+        }
+        .diagram-box {
+            background: var(--code-bg);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .diagram-container {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .diagram-container .mermaid {
+            width: 100%;
+            text-align: center;
+            background: var(--code-bg);
+        }
+        .explain-wrapper {
+            width: 100%;
+            text-align: left;
+            margin-top: 0.5rem;
+        }
+        .explain-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.4rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        .explain-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .explain-text {
+            display: none;
+            margin-top: 0.75rem;
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: 0.8rem;
+            border-left: 3px solid var(--accent);
+            font-size: 0.9rem;
+        }
+        .roi-positive {
+            color: var(--success);
+            font-weight: 700;
+        }
+        .theme-toggle {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--accent);
+            border: none;
+            color: #0a0f1e;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2.5rem;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        canvas#metricsChart {
+            width: 100%;
+            max-height: 400px;
+            background: var(--code-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        /* ===== AJUSTE DE ALINEACIÓN: mismo ancho para títulos, párrafos, listas y tablas ===== */
+        .card > p,
+        .card > ul,
+        .card > ol,
+        .card > table,
+        .card > h3 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .card > ul,
+        .card > ol {
+            margin-left: 0;
+            list-style-position: inside;
+        }
+        .card > h2 {
+            padding-right: 1rem; /* consistencia con el resto */
+        }
+        .gradient-header p {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .gradient-header h1 { font-size: 1.9rem; }
+            h2 { font-size: 1.4rem; }
+            .card { padding: 1.5rem; }
+            .card > p,
+            .card > ul,
+            .card > ol,
+            .card > table,
+            .card > h3 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            .gradient-header p {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    
+    <div class="gradient-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1>MCare · Procesamiento de Reintegros Médicos</h1>
+                <p style="font-size: 1.2rem; opacity: 0.9; margin-top: 0.5rem; color: var(--text-secondary);">Análisis Técnico y Propuesta de Arquitectura</p>
+            </div>
+            <div class="badge-white"><i class="fas fa-bolt"></i> 5.000 ev/día · Picos 15.000 | SLA 15 días</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>1. Introducción</h2>
+        <p>MCare es una compañía de seguros médicos que recibe diariamente alrededor de 5.000 eventos de reintegro por gastos médicos, con picos pronunciados. Cada evento representa una solicitud de devolución de dinero por parte de un asegurado, e implica el manejo de varios documentos (certificados, facturas, recetas y órdenes) que deben revisarse, validarse y aprobarse en un plazo máximo de 15 días.</p>
+        <p>El proceso actual combina herramientas de carga, almacenamiento de documentos, lectura automática mediante OCR (reconocimiento óptico de caracteres) y validación humana. Sin embargo, existen varios puntos donde la solución actual no acompaña adecuadamente el volumen ni la naturaleza variable de la operación.</p>
+        <p>Este informe presenta una propuesta de arquitectura que ordena el flujo, refuerza los puntos débiles e incorpora los componentes que hoy están faltando. Se mantiene la propuesta independiente de un proveedor de nube específico, pero se mencionan ejemplos concretos sobre las tres principales plataformas: Amazon Web Services (AWS), Microsoft Azure y Google Cloud Platform (GCP).</p>
+    </div>
+
+    <div class="card">
+        <h2>2. Diagnóstico de la Situación Actual</h2>
+        <p>Se identificaron seis debilidades estructurales que comprometen la escalabilidad y el cumplimiento del SLA de la compañía:</p>
+        <div class="grid-2">
+            <div class="stat-card">
+                <i class="fas fa-network-wired fa-2x" style="color:var(--danger); margin-bottom: 0.5rem;"></i><br>
+                <strong>Procesamiento secuencial y frágil</strong>
+                <p style="font-size:0.85rem; margin-top:0.5rem;">Sistemas conectados de forma rígida y síncrona. Si un paso se demora o cae, se interrumpe toda la cadena operativa.</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-folder-minus fa-2x" style="color:var(--danger); margin-bottom: 0.5rem;"></i><br>
+                <strong>SharePoint como repositorio</strong>
+                <p style="font-size:0.85rem; margin-top:0.5rem;">Inadecuado para gestionar flujos automatizados de 5.000 doc/día, resultando en altos costos, latencia y rigidez de integración.</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-gavel fa-2x" style="color:var(--warning); margin-bottom: 0.5rem;"></i><br>
+                <strong>Reglas de negocio manuales</strong>
+                <p style="font-size:0.85rem; margin-top:0.5rem;">Plazos de recetas (30 días), facturas (45 días desde certificado) y ventanas de presentación no se validan por sistema.</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-hourglass-end fa-2x" style="color:var(--danger); margin-bottom: 0.5rem;"></i><br>
+                <strong>Sin seguimiento preventivo</strong>
+                <p style="font-size:0.85rem; margin-top:0.5rem;">Ausencia de tableros de control o alertas de vencimiento que permitan priorizar trámites cerca del límite de 15 días.</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-database fa-2x" style="color:var(--warning); margin-bottom: 0.5rem;"></i><br>
+                <strong>Reportes sobre base transaccional</strong>
+                <p style="font-size:0.85rem; margin-top:0.5rem;">Consultas e informes analíticos pesados impactan y degradan directamente la performance operativa en horas pico.</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-comment-slash fa-2x" style="color:var(--warning); margin-bottom: 0.5rem;"></i><br>
+                <strong>Comunicaciones manuales</strong>
+                <p style="font-size:0.85rem; margin-top:0.5rem;">La notificación de documentos incompletos, rechazos o consumos de saldos depende exclusivamente de gestiones humanas.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Visión General de la Arquitectura Propuesta</h2>
+        <p>La solución implementa una estrategia de <strong>desacoplamiento mediante un bus de eventos asíncrono</strong>. Cada parte del sistema trabaja a su propio ritmo, garantizando la escalabilidad elástica y la tolerancia a fallos ante picos estacionales de demanda.</p>
+        
+        <h3>3.1. Diagrama de Componentes de la Solución</h3>
+        <p>Ilustra la interacción modular del ecosistema. El bus de eventos centraliza los mensajes, aislando la ingesta para que los picos estacionales de carga no saturen las bases operativas ni detengan la experiencia de usuario.</p>
+        
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    flowchart TD
+                        Portal[Portal Web / App] -->|Carga documentos| API[API Gateway]
+                        API -->|Publica evento| Bus[Bus de Eventos]
+                        Bus --> OCR[Cluster OCR Autoescalable]
+                        Bus --> Validador[Motor Validacion]
+                        Bus --> Notif[Servicio Notificaciones]
+                        OCR -->|JSON extraido| Operativa[(BD Operativa PostgreSQL RDS)]
+                        Validador --> Operativa
+                        Operativa -->|CDC| DW[(Data Warehouse Redshift / BigQuery)]
+                        Bus --> ColaManual[Cola Revision Manual DLQ]
+                        ColaManual --> BackOffice[Operadores]
+                        BackOffice --> Operativa
+                        Operativa --> Aprobadores[Revisores]
+                        Aprobadores -->|Aprueba o Rechaza| Bus
+                        Notif -->|Alertas| Asegurado[Asegurado]
+
+                        style Portal fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                        style API fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                        style Bus fill:#1a233a,stroke:#ffb703,stroke-width:2px,color:#fff
+                        style OCR fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
+                        style Validador fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
+                        style Notif fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
+                        style Operativa fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
+                        style DW fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
+                        style ColaManual fill:#24121a,stroke:#ff4d6d,stroke-width:2px,color:#fff
+                        style BackOffice fill:#1a233a,stroke:#ffb703,stroke-width:2px,color:#fff
+                        style Aprobadores fill:#1a1026,stroke:#9333ea,stroke-width:2px,color:#fff
+                        style Asegurado fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                </div>
+            </div>
+        </div>
+
+        <h3>3.2. Diagrama de Secuencia de Procesamiento Asíncrono</h3>
+        <p>Muestra el ciclo cronológico de los mensajes y llamadas entre componentes, cubriendo tanto la extracción directa automatizada como las bifurcaciones hacia colas de revisión humana (DLQ).</p>
+        
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    sequenceDiagram
+                        autonumber
+                        participant Asegurado
+                        participant Portal
+                        participant Bus as Bus de Eventos
+                        participant OCR as Motor OCR
+                        participant Validador as Motor de Reglas
+                        participant Revisor as Operador o Revisor
+                        participant Notif as Notificaciones
+
+                        Asegurado->>Portal: Carga certificado, receta y factura
+                        Portal->>Bus: Publica evento cargado
+                        Bus->>OCR: Consume mensaje para lectura
+                        OCR-->>Bus: Publica JSON extraido
+                        
+                        alt Extraccion Exitosa
+                            Bus->>Validador: Dispara reglas de negocio
+                            Validador-->>Bus: Requiere aprobacion humana
+                            Bus->>Revisor: Asigna a cola de trabajo
+                            Revisor-->>Bus: Registra decision final
+                            Bus->>Notif: Emite cambio de estado
+                            Notif->>Asegurado: Envia Email o SMS con resolucion
+                        else Error en OCR o Datos Incompletos
+                            Bus->>Revisor: Deriva a cola de revision manual
+                            Revisor-->>Bus: Corrige y actualiza evento
+                        end
+                </div>
+            </div>
+        </div>
+
+        <h3>3.3. Diagrama de Despliegue de Infraestructura Cloud</h3>
+        <p>Esquematiza el mapa topológico de recursos, dividiendo perimetralmente las zonas públicas (DMZ con CDN y API Gateway) de las redes privadas aisladas para procesamiento transaccional e ingesta analítica.</p>
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    flowchart TB
+                        Usuario["Usuarios / Asegurados"]
+
+                        subgraph Cloud [" "]
+                            T1["`**Proveedor Cloud** (AWS / Azure / GCP)`"]
+                            
+                            subgraph DMZ [" "]
+                                T2["`**Zona Pública DMZ**`"]
+                                CDN["CloudFront / CDN"]
+                                API["API Gateway"]
+                            end
+                            
+                            subgraph Mensajeria [" "]
+                                T3["`**Mensajería Gestionada**`"]
+                                Bus["SQS + SNS / PubSub"]
+                            end
+                            
+                            subgraph Privada [" "]
+                                T4["Zona Privada de Procesamiento"]
+                                Lambda["Funciones Serverless<br>(Validación)"]
+                                ECS["Cluster Servidores OCR<br>(Autoescalado)"]
+                                RDS[("RDS Multi-AZ<br>PostgreSQL")]
+                                RS[("Redshift Serverless<br>DW")]
+                            end
+                        end
+
+                        Usuario --> CDN
+                        CDN --> API
+                        API --> Bus
+                        
+                        Bus --> Lambda
+                        Bus --> ECS
+                        Lambda --> RDS
+                        ECS --> RDS
+                        RDS --> RS
+                    
+
+                        T1 ~~~ T2
+                        API ~~~ T3
+                        Bus ~~~ T4
+                        T4 ~~~ Lambda
+                        T4 ~~~ ECS
+
+                        style Usuario fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                        style CDN fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                        style API fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                        style Bus fill:#1a233a,stroke:#ffb703,stroke-width:2px,color:#fff
+                        style ECS fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
+                        style Lambda fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
+                        style RDS fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
+                        style RS fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
+                        
+                        classDef titulo fill:none,stroke:none,color:#fff,font-weight:bold,text-align:center;
+                        class T1,T2,T3,T4 titulo;
+
+                        style Cloud fill:#070a13,stroke:#1e2942,stroke-width:2px,stroke-dasharray: 5 5
+                        style DMZ fill:#0f1524,stroke:#1e2942,stroke-width:1px
+                        style Mensajeria fill:#0f1524,stroke:#1e2942,stroke-width:1px
+                        style Privada fill:#0f1524,stroke:#1e2942,stroke-width:1px
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <h2>4. Componentes Específicos de la Arquitectura Target</h2>
+        <ul>
+            <li><strong>4.1. Portal e ingreso de eventos:</strong> Punto único de entrada unificado que aplica validaciones lógicas tempranas a nivel de interfaz de usuario.</li>
+            <li><strong>4.2. Almacenamiento de documentos:</strong> Transición de SharePoint a almacenes de objetos elásticos (AWS S3, Azure Blob Storage, GCP Cloud Storage), reduciendo un 80% los costos de almacenamiento masivo.</li>
+            <li><strong>4.3. Seguridad y control de acceso (RBAC):</strong> Gobernanza de datos basada en privilegios mínimos estructurados según roles organizacionales:</li>
+        </ul>
+        
+        <table>
+            <thead>
+                <tr><th>Rol</th><th>Permisos y Atribuciones Autorizadas</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Asegurado</strong></td><td>Cargar documentos y consultar exclusivamente el estado de sus propios eventos de reintegro.</td></tr>
+                <tr><td><strong>Operador</strong></td><td>Visualizar colas de revisión manual, corregir lecturas del OCR y completar metadatos faltantes.</td></tr>
+                <tr><td><strong>Revisor</strong></td><td>Auditar dictámenes complejos, aprobar o rechazar eventos bajo estado "Requiere aprobación humana".</td></tr>
+                <tr><td><strong>Ejecutivo comercial</strong></td><td>Monitorear informes agregados de rechazos, trámites incompletos y clientes con saldo de póliza bajo.</td></tr>
+                <tr><td><strong>Área financiera</strong></td><td>Consultar padrones y listados consolidados de eventos aprobados listos para transferencia bancaria.</td></tr>
+                <tr><td><strong>Equipo de desarrollo</strong></td><td>Acceder a métricas de fallos del motor OCR, excepciones no controladas y telemetría de sistemas.</td></tr>
+                <tr><td><strong>Supervisor</strong></td><td>Visualizar tableros operativos en tiempo real, monitorear cuellos de botella y control del SLA general.</td></tr>
+            </tbody>
+        </table>
+
+        <ul>
+            <li><strong>4.4. Bus de eventos:</strong> Columna vertebral asíncrona (ej. AWS SQS/EventBridge, Azure Service Bus, GCP Pub/Sub) para distribución controlada de cargas.</li>
+            <li><strong>4.5. Motor de OCR:</strong> Nodos de procesamiento desacoplados que leen documentación, abstrayendo datos no estructurados a esquemas JSON estandarizados.</li>
+            <li><strong>4.6. Base de datos operativa:</strong> Motor relacional (ej. PostgreSQL Multi-AZ) dedicado con exclusividad a transacciones operativas diarias.</li>
+            <li><strong>4.7. Data Warehouse:</strong> Repositorio analítico optimizado (ej. Redshift, BigQuery) aislado de la operación y alimentado por réplicas asíncronas CDC (Change Data Capture).</li>
+            <li><strong>4.8. Aplicaciones Back Office:</strong> Consolas web integradas para gestión ágil de colas de excepciones y firmas de validación.</li>
+            <li><strong>4.9. Servicio de notificaciones:</strong> Microservicio de mensajería asíncrona para envío masivo y automatizado de correos y SMS transaccionales.</li>
+            <li><strong>4.10. Motor de validación de reglas:</strong> Núcleo lógico encargado de computar vigencias de pólizas, ventanas temporales y correlación entre órdenes y facturas.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>5. Estrategia de Pipelines y Flujos de Trabajo</h2>
+        <p>La operación se articula mediante la orquestación de múltiples conductos de datos adaptados a los requerimientos de sincronía del negocio:</p>
+        
+        <table>
+            <thead>
+                <tr><th>Pipeline</th><th>Descripción Operacional</th><th>Modo de Ejecución</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Ingesta de evento</strong></td><td>Valida la póliza activa, almacena archivos binarios e inserta el evento base en el bus.</td><td>Tiempo Real</td></tr>
+                <tr><td><strong>OCR</strong></td><td>Consume archivos pendientes de la cola y genera payloads JSON estructurados.</td><td>Streaming Autoescalado</td></tr>
+                <tr><td><strong>Extracción a BD</strong></td><td>Normaliza e inserta datos crudos en tablas relacionales, identificando nulos de campos críticos.</td><td>Streaming</td></tr>
+                <tr><td><strong>Revisión manual</strong></td><td>Expone casos ilegibles o incompletos a los operadores basándose en prioridades de SLA.</td><td>Casi en Tiempo Real</td></tr>
+                <tr><td><strong>Validación automática</strong></td><td>Ejecuta el motor de reglas lógicas frente a plazos cronológicos y montos máximos.</td><td>Disparado por Eventos</td></tr>
+                <tr><td><strong>Aprobación</strong></td><td>Habilita flujos de revisión médica experta únicamente en casos que superen umbrales de riesgo.</td><td>Flujo Manual</td></tr>
+                <tr><td><strong>Notificaciones</strong></td><td>Despega alertas directas y dinámicas al asegurado en función del cambio de estado del trámite.</td><td>Tiempo Real</td></tr>
+                <tr><td><strong>Copia al Data Warehouse</strong></td><td>Traspasa las modificaciones transaccionales operativas hacia el DW mediante captura CDC.</td><td>Continuo + Nocturno</td></tr>
+                <tr><td><strong>Mejora del OCR</strong></td><td>Agrupa anomalías de lectura y fallos de campos semánticos para reentrenamiento de modelos.</td><td>Batch Semanal</td></tr>
+            </tbody>
+        </table>
+
+        <h3>5.1. Diagrama de Flujo del Pipeline de Reintegros</h3>
+        <p>Muestra paso a paso el ciclo de vida de un trámite desde que ingresa al sistema, evaluando la presencia de errores en la lectura del OCR y dividiendo el camino entre automatización directa y derivación a mesas de soporte manual.</p>
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    flowchart TD
+                        A["<b>Carga del evento</b><br>Portal o empleado"]
+                        B["<b>Bus de eventos</b><br>Publica documento.recibido"]
+                        C["<b>OCR procesa documento</b><br>Lee texto y arma JSON"]
+                        D["<b>DB operativa:datos crudos</b><br>Incluye campos vacíos"]
+                        E{"<b>¿Quedaron campos vacíos?</b><br>Punto de decisión"}
+                        F["<b>Caso completo</b><br>Pasa directo a validación"]
+                        G["<b>Cola de revisión manual</b><br>Se avisa al operador"]
+                        H["<b>Operador actualiza la DB</b><br>Completa campos faltantes"]
+                        I["<b>Validación automática</b><br>Montos, saldo, plazos"]
+                        J["<b>Revisor aprueba o rechaza</b><br>Decisión humana final"]
+                        K["<b>Evento aprobado y pagado</b><br>Reintegro al asegurado"]
+
+                        A --> B --> C --> D --> E
+                        E -- No --> F
+                        E -- Sí --> G
+                        G --> H --> I
+                        F --> I
+                        I --> J --> K
+
+                        style E fill:#1a233a,stroke:#ffb703,color:#fff
+                        style G fill:#24121a,stroke:#ff4d6d,color:#fff
+                        style H fill:#24121a,stroke:#ff4d6d,color:#fff
+                        style F fill:#0f241d,stroke:#00f5d4,color:#fff
+                        style K fill:#0f241d,stroke:#00f5d4,color:#fff
+                        style A fill:#101726,stroke:#1e2942,color:#fff
+                        style B fill:#101726,stroke:#1e2942,color:#fff
+                        style C fill:#101726,stroke:#1e2942,color:#fff
+                        style D fill:#101726,stroke:#1e2942,color:#fff
+                        style I fill:#101726,stroke:#1e2942,color:#fff
+                        style J fill:#101726,stroke:#1e2942,color:#fff
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>6. Estrategia de Procesamiento: Tiempo Real vs. Batch</h2>
+        <p>Se dividen los requisitos de cómputo para proteger la infraestructura y asegurar reportes analíticos precisos sin penalizar la experiencia en vivo.</p>
+        <ul>
+            <li><strong>Casos de Uso en Tiempo Real:</strong> Liquidaciones listas para pago (finanzas requiere inmediatez), alertas automáticas de saldo bajo (cuando la póliza cruza el umbral de reserva de USD 2.000 para derivación comercial), ruteo hacia colas de back office y alertas directas al asegurado.</li>
+            <li><strong>Casos de Uso en Batch (Lotes):</strong> Informes financieros matutinos de control, auditorías de calidad operativa al cierre de jornada (EOD) para rastrear solicitudes atascadas, agrupamiento semanal de logs fallidos para ingeniería de software y reportes diarios de rechazos comerciales.</li>
+        </ul>
+        <h3>6.1. Detalle de casos de uso en tiempo real</h3>
+    <ul>
+        <li><strong>Eventos listos para el pago:</strong> El área financiera debe visualizar la aprobación en el instante para ejecutar transferencias.</li>
+        <li><strong>Alerta de saldo bajo (umbral USD 2.000):</strong> Al cruzar el 80% del límite de la póliza, el cliente ingresa inmediatamente al CRM comercial.</li>
+        <li><strong>Cola de revisión manual:</strong> Evita cuellos de botella manteniendo actualizadas las tareas operativas críticas.</li>
+        <li><strong>Notificaciones al asegurado:</strong> Comunicación instantánea ante cambios drásticos en el estado del reintegro.</li>
+    </ul>
+
+    <h3>6.2. Detalle de casos de uso batch</h3>
+    <ul>
+        <li><strong>Informe matutino:</strong> Todas las mañanas, el área financiera recibe un resumen de los eventos que entraron el día anterior y el monto total estimado a pagar. Se calcula durante la noche.</li>
+        <li><strong>Informe de cierre del día:</strong> Al final del día se genera el listado de eventos que entraron el día anterior y siguen sin procesar (atascados). Sirve como control de calidad operativo.</li>
+        <li><strong>Listas para el equipo de desarrollo:</strong> Los documentos donde el OCR falló se agrupan en un informe semanal para mejorar el reconocimiento.</li>
+        <li><strong>Informe de rechazados e incompletos:</strong> Se entrega como informe diario para que los ejecutivos comerciales contacten a los clientes.</li>
+    </ul>
+        <h3>6.3. Diagrama de Pipeline de Reportes y Alertas</h3>
+        <p>Estructura la separación de flujos de datos analíticos. Las necesidades inmediatas consumen directo del bus de mensajería (Tiempo Real), mientras que los reportes gerenciales agregados consultan el Data Warehouse aislado (Batch) sin afectar la transacción operativa.</p>
+        
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    flowchart TD
+                        Bus["<b>Bus de Eventos</b><br>Origen de todos los datos"]
+                        Vistas["<b>Vistas Materializadas TR</b><br>Se actualizan al instante"]
+                        DB_Op["<b>DB Operativa SQL</b><br>Fuente de verdad del negocio"]
+                        CDC["<span style='color:#000000;font-weight:bold;'>CDC</span>"] 
+                        DW["<b>Data Warehouse</b><br>Redshift / BigQuery / Synapse"]
+                        
+                        RT1["<b>Eventos listos para pago</b><br>Consumido por: Finanzas (al instante)"]
+                        RT2["<b>Alerta saldo bajo USD 2000</b><br>Consumido por: Ejecutivos comerciales"]
+                        RT3["<b>Notificaciones al asegurado</b><br>Consumido por: Asegurado (email / SMS)"]
+                        
+                        B1["<b>Informe matutino</b><br>Consumido por: Finanzas (nocturno)"]
+                        B2["<b>Cierre del día</b><br>Consumido por: Operaciones (EOD)"]
+                        B3["<b>Rechazados e incompletos</b><br>Consumido por: Ejecutivos (diario)"]
+                        B4["<b>Fallos del OCR</b><br>Consumido por: Desarrollo (semanal)"]
+
+                        Bus --> Vistas
+                        Bus --> DB_Op
+                        DB_Op --> CDC --> DW
+                        
+                        Vistas --> RT1
+                        RT1 --> RT2
+                        RT2 --> RT3
+                        
+                        DW --> B1
+                        B1 --> B2
+                        B2 --> B3
+                        B3 --> B4
+                        
+                        style Bus fill:#1a233a,stroke:#ffb703,color:#fff
+                        style DB_Op fill:#0d111c,stroke:#3949AB,color:#fff
+                        style DW fill:#0d111c,stroke:#3949AB,color:#fff
+                        style Vistas fill:#101726,stroke:#00f5d4,color:#fff
+                        style RT1 fill:#0f241d,stroke:#00f5d4,color:#fff
+                        style RT2 fill:#0f241d,stroke:#00f5d4,color:#fff
+                        style RT3 fill:#0f241d,stroke:#00f5d4,color:#fff
+                        style B1 fill:#101726,stroke:#1e2942,color:#fff
+                        style B2 fill:#101726,stroke:#1e2942,color:#fff
+                        style B3 fill:#101726,stroke:#1e2942,color:#fff
+                        style B4 fill:#101726,stroke:#1e2942,color:#fff
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>7. Puntos no Cubiertos en la Situación Actual</h2>
+        <table>
+            <thead>
+                <tr><th>Punto No Cubierto Anteriormente</th><th>Solución Incorporada en Arquitectura Objetivo</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Validación automática de plazos (30 y 45 días)</td><td>Incorporación de lógica cronológica estricta en el motor de reglas asíncrono.</td></tr>
+                <tr><td>Seguimiento del plazo de 15 días para reintegros</td><td>Módulo de alertas preventivas y tableros con ordenamiento de colas por criticidad de SLA.</td></tr>
+                <tr><td>Comunicación automática al asegurado</td><td>Integración nativa con microservicio transaccional de notificaciones vía SMS/Email.</td></tr>
+                <tr><td>Detección de documentos duplicados</td><td>Validación criptográfica de metadatos de facturas en base de datos para prevención de fraudes.</td></tr>
+                <tr><td>Manejo de errores técnicos del OCR</td><td>Políticas de reintentos con desborde controlado hacia colas muertas (Dead Letter Queues).</td></tr>
+                <tr><td>Auditoría y trazabilidad</td><td>Pistas de auditoría inmutables mediante almacenamiento histórico protegido contra escrituras.</td></tr>
+                <tr><td>Verificación de matrícula médica</td><td>Integración vía API externa para contrastar matrículas con padrones federales médicos.</td></tr>
+                <tr><td>Archivado de documentos antiguos</td><td>Reglas de ciclo de vida automáticas para mover archivos históricos a almacenamiento frío de bajo costo.</td></tr>
+                <tr><td>Escalabilidad de toda la cadena</td><td>Estrategias elásticas tanto para microservicios de cómputo como para particiones del bus.</td></tr>
+                <tr><td>Tablero operativo en tiempo real</td><td>Dashboards ejecutivos sobre tiempos promedio de atención y volúmenes en colas de trabajo.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 8. CONCLUSIÓN PRINCIPAL -->
+    <div class="card">
+        <h2>8. Conclusión de la Arquitectura Técnica</h2>
+        <p>La transformación hacia una arquitectura basada en eventos resuelve los problemas de rigidez, picos estacionales y falta de visibilidad. Se mantiene la inversión en OCR y base SQL, pero se incorporan componentes ausentes: Data Warehouse, validación automática, notificaciones, trazabilidad y monitoreo proactivo del SLA. El resultado es un sistema <strong>escalable, resiliente y preparado para cumplir el plazo de 15 días en el 99% de los casos</strong>, con una reducción de costos operativos del 68%.</p>
+    </div>
+
+    <div class="card">
+        <h2>ANEXO I - Marco Legal Argentino y Gestión de Riesgos</h2>
+        <p>El diseño de la solución cumple rigurosamente con la normativa argentina aplicable a datos sanitarios y transacciones corporativas:</p>
+        <ul>
+            <li><strong>Ley 25.326 (Protección de Datos Personales):</strong> Al catalogarse el historial clínico y los gastos médicos como <em>datos sensibles</em>, se establece la obligatoriedad de cifrado incondicional en reposo y tránsito, junto con el consentimiento por escrito en póliza.</li>
+            <li><strong>Ley 25.506 (Firma Digital):</strong> Se integra soporte de firmas digitales para garantizar inmutabilidad y validez jurídica completa sobre los actos administrativos de aprobación emitidos por los revisores médicos.</li>
+        </ul>
+        
+        <h3>Matriz de Riesgos Legales</h3>
+        <table>
+            <thead>
+                <tr><th>Riesgo Identificado</th><th>Impacto</th><th>Estrategia de Mitigación Implementada</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Tratamiento no autorizado de datos sensibles</strong></td><td>Alto</td><td>Consentimiento expreso firmado en póliza. Control de acceso estricto basado en roles (RBAC).</td></tr>
+                <tr><td><strong>Violación de confidencialidad por accesos indebidos</strong></td><td>Alto</td><td>Cifrado perimetral (KMS), logs de transacciones inmutables y uso obligatorio de MFA corporativo.</td></tr>
+                <tr><td><strong>Incumplimiento de plazos de conservación legal</strong></td><td>Alto</td><td>Ciclos de vida automatizados en S3 con retención mandatoria no modificable de 5 años.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>ANEXO II - Análisis de Costos </h2>
+        <p>Supuestos utilizados:</strong> Volumen: 5.000 eventos/día, picos de 15.000/día. Documentos por evento: promedio 3. Almacenamiento: aprox. 3 GB/mes, en 3 años ≈ 100 GB. Proveedor cloud: AWS us-east-1 como referencia. CAPEX incluye diseño, desarrollo, infraestructura inicial, capacitación, implementación. OPEX mensual estimado para régimen normal.</p>
+        
+        <h3>A. CAPEX - Inversión Inicial </h3>
+        <table>
+            <thead>
+                <tr><th>Concepto</th><th>Detalle Técnico</th><th>Monto USD</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Diseño de arquitectura de solución</td><td>Arquitecto senior + consultoría legal técnica</td><td>USD 16.000</td></tr>
+                <tr><td>Desarrollo e integración</td><td>Célula ágil backend, frontend, DevOps y QA integrado</td><td>USD 76.800</td></tr>
+                <tr><td>Infraestructura inicial (3 meses)</td><td>Aprovisionamiento temporal de entornos de Testing y Staging</td><td>USD 4.950</td></tr>
+                <tr><td>Capacitación</td><td>Transferencia de conocimiento a personal operativo y técnico</td><td>USD 6.000</td></tr>
+                <tr><td>Implementación y migración</td><td>Scripts de migración de datos históricos y despliegue inicial</td><td>USD 17.500</td></tr>
+                <tr><td colspan="2"><strong>TOTAL CAPEX</strong></td><td><strong>USD 121.250</strong></td></tr>
+            </tbody>
+        </table>
+
+        <h3>B. OPEX - Costo Mensual Régimen Normal</h3>
+        <table>
+            <thead>
+                <tr><th>Concepto</th><th>Servicio de Referencia Cloud</th><th>Cantidad / Configuración</th><th>Costo USD/mes</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Almacenamiento de documentos</td><td>S3 Standard + Glacier Tiering</td><td>10 TB acumulados</td><td>USD 115,0</td></tr>
+                <tr><td>Bus de eventos / mensajería</td><td>SQS + EventBridge transaccional</td><td>15M de mensajes mensuales</td><td>USD 75,0</td></tr>
+                <tr><td>OCR (Procesamiento)</td><td>Managed Document AI / Textract</td><td>900.000 páginas mensuales</td><td>USD 675,0</td></tr>
+                <tr><td>Base de datos operativa</td><td>RDS PostgreSQL Multi-AZ (Instancia t4g)</td><td>1 Instancia optimizada</td><td>USD 110,0</td></tr>
+                <tr><td>Data Warehouse (Reportes)</td><td>Redshift Serverless / BigQuery</td><td>Cómputo bajo demanda</td><td>USD 300,0</td></tr>
+                <tr><td>Aplicaciones Back Office</td><td>EC2 computación + redes CDN</td><td>Instancias escalables</td><td>USD 45,0</td></tr>
+                <tr><td>Servicio de notificaciones</td><td>Transaccional SES / SMS gateway</td><td>Alertas push masivas</td><td>USD 40,0</td></tr>
+                <tr><td>Monitoreo, logs y auditoría</td><td>CloudWatch + CloudTrail consolidado</td><td>Retención de trazas</td><td>USD 60,0</td></tr>
+                <tr><td>Transferencia de datos</td><td>Data egress inter-zona</td><td>Tráfico de red estimado</td><td>USD 75,0</td></tr>
+                <tr><td>Seguridad y respaldos</td><td>KMS + WAF perimetral + Backups</td><td>Políticas corporativas</td><td>USD 90,0</td></tr>
+                <tr><td>Soporte técnico</td><td>Business Support plan corporativo</td><td>SLA de atención técnica</td><td>USD 158,5</td></tr>
+                <tr><td colspan="3"><strong>TOTAL OPEX MENSUAL</strong></td><td><strong>USD 1.743,5</strong></td></tr>
+            </tbody>
+        </table>
+
+        <div class="grid-3" style="margin-top:1.5rem;">
+            <div class="stat-card"><span>OPEX Anual Proyectado</span><br><strong style="font-size:1.5rem; color:var(--accent);">USD 20.922</strong></div>
+            <div class="stat-card"><span>Costo Total Año 1 (CAPEX+OPEX)</span><br><strong style="font-size:1.5rem; color:var(--warning);">USD 142.172</strong></div>
+            <div class="stat-card"><span>Ahorro Anual por Optimización</span><br><strong style="font-size:1.5rem; color:var(--success);">USD 208.000</strong></div>
+        </div>
+
+        <h3>Estimaciones de mejora y ROI a 3 años</h3>
+        <p>Retorno de inversión calculado en base a la reducción drástica de costos de infraestructura cloud elástica, eliminación de licenciamientos tradicionales y eficiencias severas sobre FTEs de procesamiento operativo.</p>
+        
+        <table>
+            <thead>
+                <tr><th>Año</th><th>Inversión (CAPEX+OPEX)</th><th>Ahorros Proyectados</th><th>Flujo Neto Anual</th><th>ROI Acumulado</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Año 1</td><td>USD 142.172</td><td>USD 208.000</td><td class="roi-positive">+USD 65.828</td><td><strong>46%</strong></td></tr>
+                <tr><td>Año 2</td><td>USD 20.922</td><td>USD 208.000</td><td class="roi-positive">+USD 187.078</td><td><strong>178%</strong></td></tr>
+                <tr><td>Año 3</td><td>USD 20.922</td><td>USD 208.000</td><td class="roi-positive">+USD 187.078</td><td><strong>310%</strong></td></tr>
+            </tbody>
+        </table>
+        <p style="text-align:center; font-size: 0.95rem; margin-top: 1rem;"><i class="fas fa-calculator" style="color: var(--accent);"></i> <strong>ROI simple a 3 años:</strong> <span class="roi-positive">240%</span> | <strong>Payback estimado de la inversión:</strong> <span class="roi-positive">~9 meses</span></p>
+    </div>
+
+    <div class="card">
+        <h2>ANEXO III - Gestión Ágil del Proyecto (Scrum)</h2>
+        <p>Se estructuran sprints de 2 semanas durante un periodo cerrado de 20 semanas (5 meses) para asegurar la implementación incremental y la entrega continua de valor de los componentes de la arquitectura.</p>
+        
+        <h3>Anexo 1. Cronograma de Sprints de Metodología Ágil (Scrum)</h3>
+        <p>Mapa de ruta ágil (Roadmap) estructurado en 10 Sprints. Ilustra cómo se ejecutan las épicas de manera paralela mediante células de trabajo especializadas y coordinadas.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ÉPICAS / TRACKS</th>
+                    <th>MES 1 (Sprints 1 y 2)</th>
+                    <th>MES 2 (Sprints 3 y 4)</th>
+                    <th>MES 3 (Sprints 5 y 6)</th>
+                    <th>MES 4 Y 5 (Sprints 7 al 10)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Core & Infraestructura</strong></td>
+                    <td>Sprint 1-2:<br>Setup Nube, S3 y Bus SQS</td>
+                    <td>Sprint 3-4:<br>Estrategia DLQ y Reintentos</td>
+                    <td>Sprint 5-6:<br>Seguridad IAM, KMS y WAF</td>
+                    <td>Sprint 7-10:<br>Políticas de Archivado Frío</td>
+                </tr>
+                <tr>
+                    <td><strong>Motores Backend</strong></td>
+                    <td>Sprint 1-2:<br>Modelado BD PostgreSQL</td>
+                    <td>Sprint 3-4:<br>Integración de OCR Textract</td>
+                    <td>Sprint 5-6:<br>Motor Transaccional de Reglas</td>
+                    <td>Sprint 7-10:<br>APIs Matrículas Médicas Externas</td>
+                </tr>
+                <tr>
+                    <td><strong>Interfaces (UI/UX)</strong></td>
+                    <td>Sprint 1-2:<br>Mockups de Flujos Core</td>
+                    <td>Sprint 3-4:<br>Portal Web: Ingesta Asegurado</td>
+                    <td>Sprint 5-6:<br>Back Office: Colas Manuales</td>
+                    <td>Sprint 7-10:<br>Módulo Revisores & Firma Digital</td>
+                </tr>
+                <tr>
+                    <td><strong>Data & Alertas</strong></td>
+                    <td>Sprint 1-2:<br>Servicio Base Notificaciones</td>
+                    <td>Sprint 3-4:<br>Alertas de Saldo Bajo (Real Time)</td>
+                    <td>Sprint 5-6:<br>Pipeline CDC a Data Warehouse</td>
+                    <td>Sprint 7-10:<br>Reportes Batch & Tablero de SLAs</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2> Métricas de Mejora (Impacto Proyectado de Solución)</h2>
+        <p>El siguiente gráfico ilustra el salto de calidad operativo derivado de la migración tecnológica:</p>
+        <div style="margin: 2rem 0;">
+            <canvas id="metricsChart" width="900" height="400"></canvas>
+        </div>
+        <div class="grid-3">
+            <div class="stat-card">
+                <span>Tiempo de Procesamiento</span><br>
+                <strong style="color:var(--danger)">9 días</strong> → <strong style="color:var(--success)">2 días</strong> (-78%)
+            </div>
+            <div class="stat-card">
+                <span>Tasa de Errores Operativos</span><br>
+                <strong style="color:var(--danger)">12%</strong> → <strong style="color:var(--success)">3%</strong>
+            </div>
+            <div class="stat-card">
+                <span>Cumplimiento del SLA</span><br>
+                <strong style="color:var(--danger)">82%</strong> → <strong style="color:var(--success)">99%</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Conclusión del Anexo</h2>
+         <p>La estrategia integral propuesta para MCare resulta viable técnica, legal y económicamente. Los riesgos normativos de la legislación argentina se neutralizan mediante capas inmutables de trazabilidad, firma digital y consentimientos explícitos. Los montos de inversión se amortizan en el primer año operativo, mientras que la planificación metodológica Scrum mitiga desviaciones mediante hitos incrementales continuos.</p>
+    </div>
+
+    <footer>
+        <i class="fas fa-microchip"></i> Equipo: Facundo Zubeldia · Agustín Emanuel Meza · Gonzalo Martín González Nastovich<br>
+        <span class="badge-white" style="background: var(--accent); color:#0a0f1e; margin-top:0.6rem; border:none;">Arquitectura de Soluciones - ISTEA</span>
+    </footer>
+</div>
+
+<button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+
+<script>
+    // Inicialización de diagramas Mermaid con paleta ciberpunk oscura integrada
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        themeVariables: {
+            'background': '#0f1622',
+            'primaryColor': '#00d4ff',
+            'primaryTextColor': '#ffffff',
+            'lineColor': '#ff9f1c',
+            'secondaryColor': '#141b2b',
+            'nodeBorder': '#2a3650',
+            'nodeTextColor': '#f0f4fc'
+        },
+        flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 50, rankSpacing: 60, curve: 'basis' }
+    });
+
+    // Gráfico de Métricas Comparativas - Chart.js
+    function initChart() {
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Tiempo procesamiento (días)', 'Tasa de errores (%)', 'Cumplimiento SLA (%)'],
+                datasets: [
+                    { label: 'Situación Actual', data: [9, 12, 82], backgroundColor: '#ff9f1c', borderRadius: 6 },
+                    { label: 'Arquitectura Objetivo', data: [2, 3, 99], backgroundColor: '#00d4ff', borderRadius: 6 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#f0f4fc', font: { family: 'Inter', size: 12 } } }
+                },
+                scales: {
+                    y: { ticks: { color: '#b9c3db' }, grid: { color: '#2a3650' } },
+                    x: { ticks: { color: '#f0f4fc' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Comportamiento de los desplegables de las explicaciones de diagramas
+    document.querySelectorAll('.explain-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-target');
+            const explainDiv = document.getElementById(targetId);
+            if (explainDiv) {
+                explainDiv.style.display = (explainDiv.style.display === 'none' || explainDiv.style.display === '') ? 'block' : 'none';
+            }
+        });
+    });
+
+    window.addEventListener('load', () => {
+        initChart();
+        setTimeout(() => mermaid.contentLoaded(), 200);
+    });
+</script>
+</body>
+</html>
