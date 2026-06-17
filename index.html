@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>MCare | Procesamiento de Reintegros Médicos </title>
+    <title>MCare | Resumen Ejecutivo de Arquitectura y Gestión</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -490,11 +490,13 @@
 
 
     <div class="card">
-        <h2>4. Componentes Específicos de la Arquitectura Target</h2>
+        <h2>4. Componentes de la Arquitectura</h2>
         <ul>
-            <li><strong>4.1. Portal e ingreso de eventos:</strong> Punto único de entrada unificado que aplica validaciones lógicas tempranas a nivel de interfaz de usuario.</li>
-            <li><strong>4.2. Almacenamiento de documentos:</strong> Transición de SharePoint a almacenes de objetos elásticos (AWS S3, Azure Blob Storage, GCP Cloud Storage), reduciendo un 80% los costos de almacenamiento masivo.</li>
-            <li><strong>4.3. Seguridad y control de acceso (RBAC):</strong> Gobernanza de datos basada en privilegios mínimos estructurados según roles organizacionales:</li>
+            <p><strong>4.1. Portal e ingreso de eventos</strong><br>El asegurado y los empleados acceden a través de un portal web o una aplicación interna. Ambos consumen un mismo conjunto de servicios que crean el evento, hacen las validaciones iniciales (póliza vigente, saldo suficiente, matrícula del médico válida) y registran los documentos. Se busca tener un único punto de entrada con las mismas reglas, evitando inconsistencias entre lo que carga el asegurado y lo que carga un empleado. Ejemplos: AWS API Gateway con Lambda, Azure API Management con Functions, GCP API Gateway con Cloud Functions.</p>
+            <p><strong>4.2. Almacenamiento de documentos</strong><br>Se reemplaza SharePoint por un almacenamiento de objetos. Esta es una forma de guardar archivos pensada específicamente para grandes volúmenes, mucho más económica y rápida que SharePoint. Los documentos se siguen organizando por número de evento, igual que antes. Ejemplos: Amazon S3, Azure Blob Storage, Google Cloud Storage. Para archivado de largo plazo: S3 Glacier, Azure Archive, GCS Coldline.</p>
+            <p><strong>4.3. Seguridad y control de acceso</strong><br>La información que maneja MCare es sensible por naturaleza: datos de salud, documentos médicos y movimientos financieros de los asegurados. Por eso, la seguridad no es un componente aislado sino una capa transversal que aplica a todos los componentes de la arquitectura.</p>
+            <p><strong>Autenticación:</strong> Todo acceso al sistema requiere identidad verificada. Los asegurados acceden mediante usuario y contraseña con doble factor de autenticación. Los empleados se autentican contra el directorio corporativo existente.</p>
+            <p><strong>Roles y permisos:</strong> Cada usuario opera únicamente dentro del rol para el cual está habilitado:</p>
         </ul>
         
         <table>
@@ -512,15 +514,15 @@
             </tbody>
         </table>
 
-        <ul>
-            <li><strong>4.4. Bus de eventos:</strong> Columna vertebral asíncrona (ej. AWS SQS/EventBridge, Azure Service Bus, GCP Pub/Sub) para distribución controlada de cargas.</li>
-            <li><strong>4.5. Motor de OCR:</strong> Nodos de procesamiento desacoplados que leen documentación, abstrayendo datos no estructurados a esquemas JSON estandarizados.</li>
-            <li><strong>4.6. Base de datos operativa:</strong> Motor relacional (ej. PostgreSQL Multi-AZ) dedicado con exclusividad a transacciones operativas diarias.</li>
-            <li><strong>4.7. Data Warehouse:</strong> Repositorio analítico optimizado (ej. Redshift, BigQuery) aislado de la operación y alimentado por réplicas asíncronas CDC (Change Data Capture).</li>
-            <li><strong>4.8. Aplicaciones Back Office:</strong> Consolas web integradas para gestión ágil de colas de excepciones y firmas de validación.</li>
-            <li><strong>4.9. Servicio de notificaciones:</strong> Microservicio de mensajería asíncrona para envío masivo y automatizado de correos y SMS transaccionales.</li>
-            <li><strong>4.10. Motor de validación de reglas:</strong> Núcleo lógico encargado de computar vigencias de pólizas, ventanas temporales y correlación entre órdenes y facturas.</li>
-        </ul>
+        <p><strong>Cifrado:</strong> Los documentos se almacenan cifrados en reposo. Toda comunicación entre componentes viaja cifrada en tránsito mediante HTTPS/TLS.</p>
+        <p><strong>Trazabilidad y auditoría:</strong> Cada acción relevante queda registrada: quién vio un documento, quién completó un campo manualmente, quién aprobó o rechazó un evento y en qué momento. Este registro es inmutable. Ejemplos: AWS IAM con Cognito, Azure Active Directory con RBAC, GCP IAM con Identity Platform.</p>
+        <p><strong>4.4. Bus de eventos</strong><br>Es el corazón de la nueva arquitectura. Funciona como un tablero de mensajes ordenados por temas (colas). Cuando ocurre algo importante, el componente responsable publica un mensaje en el tópico correspondiente, y todos los componentes interesados en ese tema lo reciben. Ejemplos: Amazon Kinesis o SNS+SQS, Azure Event Hubs o Service Bus, GCP Pub/Sub. Para mayor exigencia: Apache Kafka gestionado.</p>
+        <p><strong>4.5. Motor de OCR</strong><br>Se conserva el cluster actual con capacidad de autoescalado. El cambio principal es cómo se le entregan los documentos: en lugar de invocarlo directamente, el OCR lee los documentos pendientes del bus de eventos. De esta forma, si llega un pico de carga, los documentos esperan ordenadamente en el bus en vez de saturar el sistema. Ejemplos: AWS Textract, Azure Form Recognizer, GCP Document AI, o clusters propios sobre EKS/AKS/GKE.</p>
+        <p><strong>4.6. Base de datos operativa</strong><br>Es la base de datos donde vive el día a día: eventos en proceso, asegurados, pólizas, saldos y documentos. Se mantiene SQL, que es la tecnología actual y resulta adecuada para este tipo de información estructurada y transaccional. Ejemplos: Amazon RDS, Azure SQL Database, Google Cloud SQL.</p>
+        <p><strong>4.7. Data Warehouse (depósito de datos para reportes)</strong><br>Se incorpora una segunda base de datos, separada de la operativa, donde se copian todos los datos relevantes para análisis e informes. Esta base está optimizada para responder rápidamente a consultas complejas sobre grandes volúmenes de datos históricos. La copia desde la base operativa al Data Warehouse se hace de manera continua y automática mediante CDC (Change Data Capture). Ejemplos: Amazon Redshift, Azure Synapse Analytics, Google BigQuery, Snowflake.</p>
+        <p><strong>4.8. Aplicaciones para el back office</strong><br>Son las herramientas que usan los empleados: Cola de revisión manual, Cola de aprobación, Tablero operativo.</p>
+        <p><strong>4.9. Servicio de notificaciones</strong><br>Componente nuevo que se suscribe a los eventos relevantes del bus y envía correos o mensajes al asegurado cuando corresponde: documentación faltante, evento rechazado, aprobación del reintegro, o cercanía al umbral del 80% de su saldo anual. Ejemplos: Amazon SES y SNS, Azure Communication Services, SendGrid o Twilio.</p>
+        <p><strong>4.10. Motor de validación de reglas</strong><br>Componente nuevo que aplica automáticamente todas las reglas del negocio antes de que el evento llegue al revisor humano: que el monto reclamado no supere la suma de las facturas, que no exceda el saldo disponible, y que se cumplan los plazos de 30 y 45 días entre certificado, órdenes y facturas. Si algo no cumple, el evento se rechaza o se marca como incompleto automáticamente.</p>
     </div>
 
     <div class="card">
