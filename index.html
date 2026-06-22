@@ -555,58 +555,108 @@
         </table>
 
         <h3>5.1. Diagrama de Flujo del Pipeline de Reintegros</h3>
-        <p>Flujo de actividades de negocio segmentado por responsabilidades funcionales. La partición de soporte manual detalla el desborde no lineal del pipeline principal alineado con la identidad cromática de la infraestructura.</p>
+        <p>Flujo completo de procesamiento de documentos basado en la arquitectura elástica y asíncrona de MCare, modelado con base en la lógica de carriles y sincronización multi-documento de la compañía.</p>
         <div class="diagram-box">
             <div class="diagram-container">
                 <div class="mermaid">
-                    graph TD
-                        %% Definición de Carriles UML mediante Subgrafos Estrictos
-                        subgraph Asegurado_O_Empleado [Canal de Ingesta]
-                            Start([● START]) --> Carga[Cargar Documentos]
+                    flowchart TD
+                        %% Pipeline 1: Ingesta de evento
+                        subgraph P1 ["Pipeline 1 · Ingesta de evento"]
+                            trig1([● Inicio: Carga de docs]) ---> valPol[Valida póliza<br/>Póliza, saldo, matrícula]
+                            valPol ---> storeS3[Almacena docs<br/>Object storage S3]
+                            storeS3 ---> busRecibido{Bus<br/>evento.recibido}
                         end
 
-                        subgraph Capa_Mensajeria [Bus de Eventos]
-                            Carga --> Publicar[Publicar Evento]
-                            Publicar --> Dispatch{Despacho Asíncrono}
+                        %% Nota intermedia de paralelismo
+                        noteParalelismo["Cada documento se procesa en paralelo e independientemente.<br/>El evento espera al documento más lento."]
+                        busRecibido ---> noteParalelismo
+
+                        %% Pipeline 2: OCR en Paralelo
+                        subgraph P2 ["Pipeline 2 · OCR (procesamiento paralelo por documento)"]
+                            noteParalelismo ---> docA[Doc A · Certificado<br/>OCR -> JSON fecha, dx, matrícula]
+                            noteParalelismo ---> docB[Doc B · Factura<br/>OCR -> JSON monto, fecha, nro]
+                            noteParalelismo ---> docC[Doc C · Receta / Orden<br/>OCR -> JSON med., matrícula]
+                            
+                            docA ---> compA{¿Completo?}
+                            docB ---> compB{¿Completo?}
+                            docC ---> compC{¿Completo?}
                         end
 
-                        subgraph Sistema_Automatizado [Pipeline Rápido - Cómputo]
-                            Dispatch -->|Doc Válido| OCR[Procesar OCR]
-                            OCR --> Validar[Ejecutar Reglas de Negocio]
+                        %% Redirección a DLQ en caso de falla o campos incompletos
+                        compA --->|No| dlqQueue
+                        compB --->|No| dlqQueue
+                        compC --->|No| dlqQueue
+
+                        %% Pipeline 3: Extracción a BD (Camino Exitoso)
+                        subgraph P3 ["Pipeline 3 · Extracción a BD (Streaming)"]
+                            compA --->|Sí| bdA[Doc A -> BD<br/>Inserta campos en tabla]
+                            compB --->|Sí| bdB[Doc B -> BD<br/>Inserta campos en tabla]
+                            compC --->|Sí| statusReady[Estado del evento<br/>Doc A: listo / Doc B: listo]
                         end
 
-                        subgraph Mesa_Soporte [Camino Lento - Latencia Humana]
-                            Dispatch -->|Fallo / Ilegible| DLQ[Encolar en DLQ]
-                            DLQ --> Revision[Corrección por Operador]
+                        %% Pipeline 4: Revisión Manual DLQ
+                        subgraph P4 ["Pipeline 4 · Revisión manual (DLQ)"]
+                            dlqQueue[DLQ<br/>Cola de revisión] ---> opManual[Operador<br/>Completa campos vacíos]
+                            opManual ---> latenciaBlock[Mayor latencia: horas a días<br/>El evento queda bloqueado]
+                            latenciaBlock ---> reinyectBus{Reinyecta al bus<br/>Publica 'corregido' -> continúa pipeline}
                         end
 
-                        %% Conexiones Inter-carril
-                        Revision -->|Reinyectar| Validar
-                        Validar --> Auditoria{¿Requiere Auditoría Médica?}
-                        Auditoria -->|Sí| Fin[Aprobar Liquidación]
-                        Auditoria -->|No| Fin
-                        Fin --> End((🖲 END))
+                        %% Reinyección del operador manual hacia el flujo de extracción/validación
+                        reinyectBus ---> statusReady
+                        bdA ---> barreraSinc
+                        bdB ---> barreraSinc
+                        statusReady ---> barreraSinc
 
-                        %% Estilos de Diseño de Subgrafos (Idénticos a la imagen de infraestructura)
-                        style Asegurado_O_Empleado fill:#0f1524,stroke:#00e5ff,stroke-width:1px,color:#fff
-                        style Capa_Mensajeria fill:#1a233a,stroke:#ffb703,stroke-width:1px,color:#fff
-                        style Sistema_Automatizado fill:#0d111c,stroke:#3949AB,stroke-width:1px,color:#fff
-                        style Mesa_Soporte fill:#1a1026,stroke:#9333ea,stroke-width:1px,color:#fff
+                        barreraSinc[=== Barrera de sincronización: todos los documentos resueltos ===]
 
-                        %% Estilos de Nodos Internos para simular los bloques de la imagen
-                        style Start fill:#101726,stroke:#00e5ff,color:#fff
-                        style Carga fill:#101726,stroke:#00e5ff,color:#fff
-                        style Publicar fill:#1a233a,stroke:#ffb703,color:#fff
-                        style Dispatch fill:#1a233a,stroke:#ffb703,color:#fff
-                        style OCR fill:#101726,stroke:#00f5d4,color:#fff
-                        style Validar fill:#101726,stroke:#00f5d4,color:#fff
-                        style DLQ fill:#1a1026,stroke:#9333ea,color:#fff
-                        style Revision fill:#1a1026,stroke:#9333ea,color:#fff
-                        style Auditoria fill:#101726,stroke:#00f5d4,color:#fff
-                        style Fin fill:#101726,stroke:#00f5d4,color:#fff
-                        style End fill:#0a0f1e,stroke:#00f5d4,stroke-width:2px,color:#fff
+                        %% Pipeline 5: Validación automática de reglas de negocio
+                        subgraph P5 ["Pipeline 5 · Validación automática de reglas de negocio"]
+                            barreraSinc ---> motVal[Motor de validación<br/>Plazos 30/45 días · monto ≤ facturas · monto ≤ saldo disponible]
+                            
+                            motVal --->|Pasa| reqAprob[Requiere aprobación<br/>Revisor humano]
+                            motVal --->|Rechaza| statusRechazado[Rechazado<br/>Notificación + estado final]
+                            
+                            reqAprob ---> statusAprobado[Aprobado<br/>Pago + notificación al asegurado]
+                        end
+
+                        %% Conexión a procesos batch finales
+                        statusAprobado ---> batchPipelines([Pipelines batch<br/>Informe matutino · cierre EOD · métricas OCR])
+                        statusRechazado ---> batchPipelines
+
+                        %% Estilos basados en Diagrama.jpg
+                        style P1 fill:#0a0f1e,stroke:#00d4ff,stroke-width:2px,color:#fff
+                        style P2 fill:#0a0f1e,stroke:#2a3650,stroke-width:2px,color:#fff
+                        style P3 fill:#0a0f1e,stroke:#2a3650,stroke-width:2px,color:#fff
+                        style P4 fill:#0a0f1e,stroke:#9333ea,stroke-width:2px,color:#fff
+                        style P5 fill:#0a0f1e,stroke:#2a3650,stroke-width:2px,color:#fff
+
+                        style trig1 fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style batchPipelines fill:#0a0f1e,stroke:#ffb703,color:#fff
+                        style valPol fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style storeS3 fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style docA fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style docB fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style docC fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style bdA fill:#0a0f1e,stroke:#ffb703,color:#fff
+                        style bdB fill:#0a0f1e,stroke:#ffb703,color:#fff
+                        style motVal fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style reqAprob fill:#0a0f1e,stroke:#00d4ff,color:#fff
+                        style statusAprobado fill:#0a0f1e,stroke:#ffb703,color:#fff
+                        style noteParalelismo fill:#0a0f1e,stroke:#2a3650,color:#fff
+                        style compA fill:#0a0f1e,stroke:#2a3650,color:#fff
+                        style compB fill:#0a0f1e,stroke:#2a3650,color:#fff
+                        style compC fill:#0a0f1e,stroke:#2a3650,color:#fff
+                        style statusReady fill:#0a0f1e,stroke:#2a3650,color:#fff
+                        style latenciaBlock fill:#0a0f1e,stroke:#2a3650,color:#fff
+                        style barreraSinc fill:#0a0f1e,stroke:#ffb703,color:#ffb703
+                        style dlqQueue fill:#0a0f1e,stroke:#9333ea,color:#fff
+                        style opManual fill:#0a0f1e,stroke:#9333ea,color:#fff
+                        style busRecibido fill:#0a0f1e,stroke:#ffb703,color:#fff
+                        style reinyectBus fill:#0a0f1e,stroke:#ffb703,color:#fff
+                        style statusRechazado fill:#0a0f1e,stroke:#ffb703,color:#fff
                 </div>
             </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem;">* El pipeline replica el flujo paralelo multidocumento, control de colas muertas (DLQ) y barreras lógicas de negocio.</p>
         </div>
 
         <h3>5.2. Diagrama de Tiempos (Comparativo de Duración)</h3>
@@ -714,8 +764,8 @@
                 <div class="mermaid">
                     graph LR
                         %% Nodos de Entrada UML
-                        ST_TR([⚡ INICIO: Stream]) --> Bus[Bus Eventos]
-                        ST_BT([⏰ INICIO: Programado]) --> CDC[Captura CDC]
+                        ST_TR([⚡ START: Stream]) --> Bus[Bus Eventos]
+                        ST_BT([⏰ START: Schedule]) --> CDC[Captura CDC]
 
                         %% Ramal Tiempo Real
                         subgraph Streaming_RealTime [Canal de Mensajería Inmediata]
