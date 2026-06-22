@@ -87,7 +87,7 @@
             color: transparent;
             border-left: 4px solid var(--accent);
             padding-left: 1rem;
-            padding-right: 1rem; /* añadido para consistencia horizontal */
+            padding-right: 1rem;
         }
         h3 {
             font-size: 1.3rem;
@@ -118,7 +118,6 @@
         .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
         .grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
         .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-        
         .stat-card {
             background: var(--code-bg);
             border-radius: 1.25rem;
@@ -178,34 +177,6 @@
             text-align: center;
             background: var(--code-bg);
         }
-        .explain-wrapper {
-            width: 100%;
-            text-align: left;
-            margin-top: 0.5rem;
-        }
-        .explain-btn {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 0.4rem 1.2rem;
-            border-radius: 2rem;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: 0.2s;
-        }
-        .explain-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .explain-text {
-            display: none;
-            margin-top: 0.75rem;
-            background: var(--bg-card);
-            padding: 1rem;
-            border-radius: 0.8rem;
-            border-left: 3px solid var(--accent);
-            font-size: 0.9rem;
-        }
         .roi-positive {
             color: var(--success);
             font-weight: 700;
@@ -224,6 +195,13 @@
             font-size: 1.5rem;
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.05);
         }
         footer {
             text-align: center;
@@ -240,40 +218,29 @@
             border-radius: 1rem;
             padding: 1.5rem;
             border: 1px solid var(--border);
+            margin-top: 1.5rem;
         }
-
-        /* ===== AJUSTE DE ALINEACIÓN: mismo ancho para títulos, párrafos, listas y tablas ===== */
-        .card > p,
-        .card > ul,
-        .card > ol,
-        .card > table,
-        .card > h3 {
+        .card > p, .card > ul, .card > ol, .card > table, .card > h3 {
             padding-left: 1rem;
             padding-right: 1rem;
         }
-        .card > ul,
-        .card > ol {
+        .card > ul, .card > ol {
             margin-left: 0;
             list-style-position: inside;
         }
         .card > h2 {
-            padding-right: 1rem; /* consistencia con el resto */
+            padding-right: 1rem;
         }
         .gradient-header p {
             padding-left: 1rem;
             padding-right: 1rem;
         }
-
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .gradient-header h1 { font-size: 1.9rem; }
             h2 { font-size: 1.4rem; }
             .card { padding: 1.5rem; }
-            .card > p,
-            .card > ul,
-            .card > ol,
-            .card > table,
-            .card > h3 {
+            .card > p, .card > ul, .card > ol, .card > table, .card > h3 {
                 padding-left: 0.5rem;
                 padding-right: 0.5rem;
             }
@@ -300,12 +267,12 @@
     <div class="card">
         <h2>1. Introducción</h2>
         <p>MCare es una compañía de seguros médicos que recibe diariamente alrededor de 5.000 eventos de reintegro por gastos médicos, con picos pronunciados. Cada evento representa una solicitud de devolución de dinero por parte de un asegurado, e implica el manejo de varios documentos (certificados, facturas, recetas y órdenes) que deben revisarse, validarse y aprobarse en un plazo máximo de 15 días.</p>
-        <p>El proceso actual combina herramientas de carga, almacenamiento de documentos, lectura automática mediante OCR (reconocimiento óptico de caracteres) y validación humana. Sin embargo, existen varios puntos donde la solución actual no acompaña adecuadamente el volumen ni la naturaleza variable de la operación.</p>
-        <p>Este informe presenta una propuesta de arquitectura que ordena el flujo, refuerza los puntos débiles e incorpora los componentes que hoy están faltando. Se mantiene la propuesta independiente de un proveedor de nube específico, pero se mencionan ejemplos concretos sobre las tres principales plataformas: Amazon Web Services (AWS), Microsoft Azure y Google Cloud Platform (GCP).</p>
+        <p>El proceso actual combina herramientas de carga, almacenamiento de documentos, lectura automática mediante OCR (reconocimiento óptico de caracteres) y validación humana. Sin embargo, existen varios puntos donde la solución actual no acompaña adecuadamente el volumen ni la naturaleza variable de la operation.</p>
+        <p>Este informe presents una propuesta de arquitectura que ordena el flujo, refuerza los puntos débiles e incorpora los componentes que hoy están faltando. Se mantiene la propuesta independiente de un proveedor de nube específico, pero se mencionan ejemplos concretos sobre las tres principales plataformas: Amazon Web Services (AWS), Microsoft Azure y Google Cloud Platform (GCP).</p>
     </div>
 
     <div class="card">
-        <h2>2. Diagnóstico de la Situación Actual</h2>
+        <h2>2. Diagnóstico de la Situation Actual</h2>
         <p>Se identificaron seis debilidades estructurales que comprometen la escalabilidad y el cumplimiento del SLA de la compañía:</p>
         <div class="grid-2">
             <div class="stat-card">
@@ -344,150 +311,188 @@
     <div class="card">
         <h2>3. Visión General de la Arquitectura Propuesta</h2>
         <p>La solución implementa una estrategia de <strong>desacoplamiento mediante un bus de eventos asíncrono</strong>. Cada parte del sistema trabaja a su propio ritmo, garantizando la escalabilidad elástica y la tolerancia a fallos ante picos estacionales de demanda.</p>
+        <p><strong>Características clave:</strong> El procesamiento es completamente asíncrono. Los documentos no siguen un orden estricto ni tardan lo mismo; el OCR, la validación y la revisión manual operan en paralelo y cada etapa puede experimentar demoras variables. La intervención manual es el cuello de botella natural y añade latencia adicional.</p>
         
-        <h3>3.1. Diagrama de Componentes de la Solución</h3>
-        <p>Ilustra la interacción modular del ecosistema. El bus de eventos centraliza los mensajes, aislando la ingesta para que los picos estacionales de carga no saturen las bases operativas ni detengan la experiencia de usuario.</p>
-        
+        <h3>3.1. Diagrama de Componentes</h3>
+        <p>Representa la estructura estática del sistema, mostrando los componentes principales, sus interfaces y las dependencias. El bus de eventos actúa como el eje central que desacopla todos los servicios.</p>
         <div class="diagram-box">
             <div class="diagram-container">
                 <div class="mermaid">
                     flowchart TD
-                        Portal[Portal Web / App] -->|Carga documentos| API[API Gateway]
-                        API -->|Publica evento| Bus[Bus de Eventos]
-                        Bus --> OCR[Cluster OCR Autoescalable]
-                        Bus --> Validador[Motor Validacion]
-                        Bus --> Notif[Servicio Notificaciones]
-                        OCR -->|JSON extraido| Operativa[(BD Operativa PostgreSQL RDS)]
-                        Validador --> Operativa
-                        Operativa -->|CDC| DW[(Data Warehouse Redshift / BigQuery)]
-                        Bus --> ColaManual[Cola Revision Manual DLQ]
-                        ColaManual --> BackOffice[Operadores]
-                        BackOffice --> Operativa
-                        Operativa --> Aprobadores[Revisores]
-                        Aprobadores -->|Aprueba o Rechaza| Bus
-                        Notif -->|Alertas| Asegurado[Asegurado]
+                        subgraph Portal["Portal Web/App"]
+                            P[Usuario]
+                        end
+                        subgraph API["API Gateway"]
+                            GW[API Gateway]
+                        end
+                        subgraph Bus["Bus de Eventos (SQS/PubSub)"]
+                            B[Event Bus]
+                        end
+                        subgraph OCR["Motor OCR"]
+                            O[OCR Cluster]
+                        end
+                        subgraph Validador["Motor de Validación"]
+                            V[Reglas]
+                        end
+                        subgraph Notif["Servicio de Notificaciones"]
+                            N[Notificador]
+                        end
+                        subgraph BD["Base de Datos Operativa"]
+                            DB[(PostgreSQL)]
+                        end
+                        subgraph DW["Data Warehouse"]
+                            DWH[(Redshift/BigQuery)]
+                        end
+                        subgraph DLQ["Cola de Revisión Manual (DLQ)"]
+                            DLQq[Cola]
+                        end
+                        subgraph BackOffice["Aplicación Back Office"]
+                            BO[Operadores]
+                        end
+                        subgraph Revisores["Revisores Humanos"]
+                            RH[Revisor]
+                        end
 
-                        style Portal fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
-                        style API fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
-                        style Bus fill:#1a233a,stroke:#ffb703,stroke-width:2px,color:#fff
-                        style OCR fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
-                        style Validador fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
-                        style Notif fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
-                        style Operativa fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
-                        style DW fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
-                        style ColaManual fill:#24121a,stroke:#ff4d6d,stroke-width:2px,color:#fff
-                        style BackOffice fill:#1a233a,stroke:#ffb703,stroke-width:2px,color:#fff
-                        style Aprobadores fill:#1a1026,stroke:#9333ea,stroke-width:2px,color:#fff
-                        style Asegurado fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
+                        P --> |carga documentos|GW
+                        GW -->|publica evento| B
+                        B -->|procesa| O
+                        B -->|procesa| V
+                        B -->|procesa| N
+                        B -->|camino lento con latencia| DLQq
+                        O -->|escribe JSON| DB
+                        V -->|actualiza estado| DB
+                        N -->|consulta| DB
+                        DLQq -->|asigna tarea| BO
+                        BO -->|actualización manual| DB
+                        DB -->|consulta| RH
+                        RH -->|publica decisión| B
+                        DB -->|CDC| DWH
+
+                        style Portal fill:#0f1a2f,stroke:#00e5ff
+                        style API fill:#0f1a2f,stroke:#00e5ff
+                        style Bus fill:#1a233a,stroke:#ffb703
+                        style OCR fill:#0f1a2f,stroke:#00f5d4
+                        style Validador fill:#0f1a2f,stroke:#00f5d4
+                        style Notif fill:#0f1a2f,stroke:#00f5d4
+                        style BD fill:#0d111c,stroke:#3949AB
+                        style DW fill:#0d111c,stroke:#3949AB
+                        style DLQ fill:#24121a,stroke:#ff4d6d
+                        style BackOffice fill:#1a233a,stroke:#ffb703
+                        style Revisores fill:#1a1026,stroke:#9333ea
+                        style P fill:#101726,stroke:#00e5ff,color:#fff
+                        style GW fill:#101726,stroke:#00e5ff,color:#fff
+                        style B fill:#1a233a,stroke:#ffb703,color:#fff
+                        style O fill:#101726,stroke:#00f5d4,color:#fff
+                        style V fill:#101726,stroke:#00f5d4,color:#fff
+                        style N fill:#101726,stroke:#00f5d4,color:#fff
+                        style DB fill:#0d111c,stroke:#3949AB,color:#fff
+                        style DWH fill:#0d111c,stroke:#3949AB,color:#fff
+                        style DLQq fill:#24121a,stroke:#ff4d6d,color:#fff
+                        style BO fill:#1a233a,stroke:#ffb703,color:#fff
+                        style RH fill:#1a1026,stroke:#9333ea,color:#fff
                 </div>
             </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem;">Los flujos de comunicación se basan en eventos asíncronos; cada componente procesa a su propio ritmo.</p>
         </div>
 
-        <h3>3.2. Diagrama de Secuencia de Procesamiento Asíncrono</h3>
-        <p>Muestra el ciclo cronológico de los mensajes y llamadas entre componentes, cubriendo tanto la extracción directa automatizada como las bifurcaciones hacia colas de revisión humana (DLQ).</p>
-        
+        <h3>3.2. Diagrama de Secuencia UML</h3>
+        <p>Muestra la interacción temporal entre los objetos, destacando el procesamiento asíncrono y los puntos de bifurcación (revisión manual vs. automática). Incluye fragmentos <code>par</code> y <code>alt</code> para reflejar la concurrencia y las decisiones.</p>
         <div class="diagram-box">
             <div class="diagram-container">
                 <div class="mermaid">
                     sequenceDiagram
-                        autonumber
-                        participant Asegurado
+                        title Secuencia de Procesamiento Asíncrono
+                        actor Asegurado
                         participant Portal
                         participant Bus as Bus de Eventos
                         participant OCR as Motor OCR
                         participant Validador as Motor de Reglas
-                        participant Revisor as Operador o Revisor
+                        participant Revisor as Revisor Humano
                         participant Notif as Notificaciones
 
-                        Asegurado->>Portal: Carga certificado, receta y factura
-                        Portal->>Bus: Publica evento cargado
-                        Bus->>OCR: Consume mensaje para lectura
-                        OCR-->>Bus: Publica JSON extraido
-                        
-                        alt Extraccion Exitosa
-                            Bus->>Validador: Dispara reglas de negocio
-                            Validador-->>Bus: Requiere aprobacion humana
-                            Bus->>Revisor: Asigna a cola de trabajo
-                            Revisor-->>Bus: Registra decision final
-                            Bus->>Notif: Emite cambio de estado
-                            Notif->>Asegurado: Envia Email o SMS con resolucion
-                        else Error en OCR o Datos Incompletos
-                            Bus->>Revisor: Deriva a cola de revision manual
-                            Revisor-->>Bus: Corrige y actualiza evento
+                        Asegurado->>Portal: Carga documentos
+                        Portal->>Bus: Publica evento "documento.cargado"
+                        Note over Bus: El evento queda encolado hasta ser COMMID
+
+                        par Procesamiento OCR
+                            Bus->>OCR: Consume mensaje (lectura asíncrona)
+                            OCR-->>Bus: Publica "ocr.completado" con JSON
+                        and Validación automática (paralela)
+                            Bus->>Validador: Consume mensaje (cuando datos disponibles)
+                            Validador-->>Bus: Publica "validacion.ok" o "validacion.fallo"
+                        end
+
+                        alt Datos completos y válidos
+                            Bus->>Revisor: Asigna a cola de aprobación humana
+                            Note over Revisor: La aprobación puede demorar horas o días
+                            Revisor-->>Bus: Publica "aprobado" o "rechazado"
+                            Bus->>Notif: Solicita notificación
+                            Notif->>Asegurado: Envía email/SMS con resolución
+                        else Datos incompletos o error OCR
+                            Bus->>Revisor: Deriva a cola de revisión manual (DLQ)
+                            Note over Revisor: El operador corrige manualmente (mayor latencia)
+                            Revisor-->>Bus: Publica "corregido" con datos actualizados
+                            Bus->>Validador: Re-evalúa
+                            Validador-->>Bus: "validacion.ok"
+                            Bus->>Revisor: Continúa flujo de aprobación
                         end
                 </div>
             </div>
         </div>
 
         <h3>3.3. Diagrama de Despliegue de Infraestructura Cloud</h3>
-        <p>Esquematiza el mapa topológico de recursos, dividiendo perimetralmente las zonas públicas (DMZ con CDN y API Gateway) de las redes privadas aisladas para procesamiento transaccional e ingesta analítica.</p>
+        <p>Distribución topológica de los recursos de cómputo y redes bajo el estándar de despliegue UML. Las zonas se segmentan por niveles de seguridad y aislamiento perimetral.</p>
         <div class="diagram-box">
             <div class="diagram-container">
                 <div class="mermaid">
                     flowchart TB
-                        Usuario["Usuarios / Asegurados"]
-
-                        subgraph Cloud [" "]
-                            T1["`**Proveedor Cloud** (AWS / Azure / GCP)`"]
-                            
-                            subgraph DMZ [" "]
-                                T2["`**Zona Pública DMZ**`"]
-                                CDN["CloudFront / CDN"]
-                                API["API Gateway"]
-                            end
-                            
-                            subgraph Mensajeria [" "]
-                                T3["`**Mensajería Gestionada**`"]
-                                Bus["SQS + SNS / PubSub"]
-                            end
-                            
-                            subgraph Privada [" "]
-                                T4["Zona Privada de Procesamiento"]
-                                Lambda["Funciones Serverless<br>(Validación)"]
-                                ECS["Cluster Servidores OCR<br>(Autoescalado)"]
-                                RDS[("RDS Multi-AZ<br>PostgreSQL")]
-                                RS[("Redshift Serverless<br>DW")]
-                            end
+                        subgraph DMZ["DMZ (Zona Pública)"]
+                            CDN[CDN / CloudFront]
+                            APIGW[API Gateway]
+                        end
+                        
+                        subgraph MSG["Zona de Mensajería"]
+                            BUS[Bus de Eventos<br>SQS / PubSub]
+                        end
+                        
+                        subgraph PRIV ["<span style='white-space: nowrap; display: block; padding-bottom: 12px;'>Zona Privada de Procesamiento</span>"]
+                            OCR["<div style='width: 190px;'>Servidor OCR<br>Autoescalado</div>"]
+                            LAMBDA["<div style='width: 190px;'>Funciones Serverless<br>Validación</div>"]
+                            RDS[(RDS Multi-AZ<br>PostgreSQL)]
+                            DW[(Redshift / BigQuery<br>Data Warehouse)]
+                        end
+                        
+                        subgraph BACK["Zona Back Office"]
+                            BOAPP[Aplicación Operadores]
                         end
 
-                        Usuario --> CDN
-                        CDN --> API
-                        API --> Bus
-                        
-                        Bus --> Lambda
-                        Bus --> ECS
-                        Lambda --> RDS
-                        ECS --> RDS
-                        RDS --> RS
-                    
+                        CDN --> APIGW
+                        APIGW -->|publica eventos| BUS
+                        BUS -->|procesa| OCR
+                        BUS -->|procesa| LAMBDA
+                        OCR -->|escribe| RDS
+                        LAMBDA -->|actualiza| RDS
+                        RDS -->|CDC| DW
+                        BUS -->|asigna tareas DLQ| BOAPP
+                        BOAPP -->|consulta/actualiza| RDS
 
-                        T1 ~~~ T2
-                        API ~~~ T3
-                        Bus ~~~ T4
-                        T4 ~~~ Lambda
-                        T4 ~~~ ECS
-
-                        style Usuario fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
-                        style CDN fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
-                        style API fill:#101726,stroke:#00e5ff,stroke-width:2px,color:#fff
-                        style Bus fill:#1a233a,stroke:#ffb703,stroke-width:2px,color:#fff
-                        style ECS fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
-                        style Lambda fill:#101726,stroke:#00f5d4,stroke-width:2px,color:#fff
-                        style RDS fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
-                        style RS fill:#0d111c,stroke:#3949AB,stroke-width:2px,color:#fff
-                        
-                        classDef titulo fill:none,stroke:none,color:#fff,font-weight:bold,text-align:center;
-                        class T1,T2,T3,T4 titulo;
-
-                        style Cloud fill:#070a13,stroke:#1e2942,stroke-width:2px,stroke-dasharray: 5 5
-                        style DMZ fill:#0f1524,stroke:#1e2942,stroke-width:1px
-                        style Mensajeria fill:#0f1524,stroke:#1e2942,stroke-width:1px
-                        style Privada fill:#0f1524,stroke:#1e2942,stroke-width:1px
+                        %% Estilos visuales exactos
+                        style DMZ fill:#0f1524,stroke:#00e5ff,color:#fff
+                        style MSG fill:#1a233a,stroke:#ffb703,color:#fff
+                        style PRIV fill:#0d111c,stroke:#3949AB,color:#fff
+                        style BACK fill:#1a1026,stroke:#9333ea,color:#fff
+                        style CDN fill:#101726,stroke:#00e5ff,color:#fff
+                        style APIGW fill:#101726,stroke:#00e5ff,color:#fff
+                        style BUS fill:#1a233a,stroke:#ffb703,color:#fff
+                        style OCR fill:#101726,stroke:#00f5d4,color:#fff
+                        style LAMBDA fill:#101726,stroke:#00f5d4,color:#fff
+                        style RDS fill:#0d111c,stroke:#3949AB,color:#fff
+                        style DW fill:#0d111c,stroke:#3949AB,color:#fff
+                        style BOAPP fill:#1a1026,stroke:#9333ea,color:#fff
                 </div>
             </div>
         </div>
     </div>
-
 
     <div class="card">
         <h2>4. Componentes de la Arquitectura</h2>
@@ -498,7 +503,6 @@
             <p><strong>Autenticación:</strong> Todo acceso al sistema requiere identidad verificada. Los asegurados acceden mediante usuario y contraseña con doble factor de autenticación. Los empleados se autentican contra el directorio corporativo existente.</p>
             <p><strong>Roles y permisos:</strong> Cada usuario opera únicamente dentro del rol para el cual está habilitado:</p>
         </ul>
-        
         <table>
             <thead>
                 <tr><th>Rol</th><th>Permisos y Atribuciones Autorizadas</th></tr>
@@ -513,7 +517,6 @@
                 <tr><td><strong>Supervisor</strong></td><td>Visualizar tableros operativos en tiempo real, monitorear cuellos de botella y control del SLA general.</td></tr>
             </tbody>
         </table>
-
         <p><strong>Cifrado:</strong> Los documentos se almacenan cifrados en reposo. Toda comunicación entre componentes viaja cifrada en tránsito mediante HTTPS/TLS.</p>
         <p><strong>Trazabilidad y auditoría:</strong> Cada acción relevante queda registrada: quién vio un documento, quién completó un campo manualmente, quién aprobó o rechazó un evento y en qué momento. Este registro es inmutable. Ejemplos: AWS IAM con Cognito, Azure Active Directory con RBAC, GCP IAM con Identity Platform.</p>
         <p><strong>4.4. Bus de eventos</strong><br>Es el corazón de la nueva arquitectura. Funciona como un tablero de mensajes ordenados por temas (colas). Cuando ocurre algo importante, el componente responsable publica un mensaje en el tópico correspondiente, y todos los componentes interesados en ese tema lo reciben. Ejemplos: Amazon Kinesis o SNS+SQS, Azure Event Hubs o Service Bus, GCP Pub/Sub. Para mayor exigencia: Apache Kafka gestionado.</p>
@@ -527,61 +530,155 @@
 
     <div class="card">
         <h2>5. Estrategia de Pipelines y Flujos de Trabajo</h2>
-        <p>La operación se articula mediante la orquestación de múltiples conductos de datos adaptados a los requerimientos de sincronía del negocio:</p>
+        <p>La operación se articula mediante la orquestación de múltiples conductos de datos adaptados a los requerimientos de sincronía del negocio. Cada pipeline tiene un <strong>punto de inicio claro</strong> (disparador) y puede ejecutarse de forma asíncrona, con tiempos de finalización variables.</p>
         
         <table>
             <thead>
-                <tr><th>Pipeline</th><th>Descripción Operacional</th><th>Modo de Ejecución</th></tr>
+                <tr>
+                    <th>Pipeline</th>
+                    <th>Descripción Operacional</th>
+                    <th>Modo de Ejecución</th>
+                    <th>Disparador / Punto de Inicio</th>
+                </tr>
             </thead>
             <tbody>
-                <tr><td><strong>Ingesta de evento</strong></td><td>Valida la póliza activa, almacena archivos binarios e inserta el evento base en el bus.</td><td>Tiempo Real</td></tr>
-                <tr><td><strong>OCR</strong></td><td>Consume archivos pendientes de la cola y genera payloads JSON estructurados.</td><td>Streaming Autoescalado</td></tr>
-                <tr><td><strong>Extracción a BD</strong></td><td>Normaliza e inserta datos crudos en tablas relacionales, identificando nulos de campos críticos.</td><td>Streaming</td></tr>
-                <tr><td><strong>Revisión manual</strong></td><td>Expone casos ilegibles o incompletos a los operadores basándose en prioridades de SLA.</td><td>Casi en Tiempo Real</td></tr>
-                <tr><td><strong>Validación automática</strong></td><td>Ejecuta el motor de reglas lógicas frente a plazos cronológicos y montos máximos.</td><td>Disparado por Eventos</td></tr>
-                <tr><td><strong>Aprobación</strong></td><td>Habilita flujos de revisión médica experta únicamente en casos que superen umbrales de riesgo.</td><td>Flujo Manual</td></tr>
-                <tr><td><strong>Notificaciones</strong></td><td>Despega alertas directas y dinámicas al asegurado en función del cambio de estado del trámite.</td><td>Tiempo Real</td></tr>
-                <tr><td><strong>Copia al Data Warehouse</strong></td><td>Traspasa las modificaciones transaccionales operativas hacia el DW mediante captura CDC.</td><td>Continuo + Nocturno</td></tr>
-                <tr><td><strong>Mejora del OCR</strong></td><td>Agrupa anomalías de lectura y fallos de campos semánticos para reentrenamiento de modelos.</td><td>Batch Semanal</td></tr>
+                <tr><td><strong>Ingesta de evento</strong></td><td>Valida la póliza activa, almacena archivos binarios e inserta el evento base en el bus.</td><td>Tiempo Real</td><td>Carga de documentos por portal o empleado</td></tr>
+                <tr><td><strong>OCR</strong></td><td>Consume archivos pendientes de la cola y genera payloads JSON estructurados.</td><td>Streaming Autoescalado</td><td>Evento "documento.recibido" en el bus</td></tr>
+                <tr><td><strong>Extracción a BD</strong></td><td>Normaliza e inserta datos crudos en tablas relacionales, identificando nulos de campos críticos.</td><td>Streaming</td><td>JSON generado por OCR</td></tr>
+                <tr><td><strong>Revisión manual</strong></td><td>Expone casos ilegibles o incompletos a los operadores basándose en prioridades de SLA.</td><td>Casi en Tiempo Real</td><td>Evento "campos_vacios" o "error_ocr" en el bus</td></tr>
+                <tr><td><strong>Validación automática</strong></td><td>Ejecuta el motor de reglas lógicas frente a plazos cronológicos y montos máximos.</td><td>Disparado por Eventos</td><td>Evento "datos_completos" en el bus</td></tr>
+                <tr><td><strong>Aprobación</strong></td><td>Habilita flujos de revisión médica experta únicamente en casos que superen umbrales de riesgo.</td><td>Flujo Manual</td><td>Evento "requiere_aprobacion" en el bus</td></tr>
+                <tr><td><strong>Notificaciones</strong></td><td>Despega alertas directas y dinámicas al asegurado en función del cambio de estado del trámite.</td><td>Tiempo Real</td><td>Evento "estado_cambiado" en el bus</td></tr>
+                <tr><td><strong>Copia al Data Warehouse</strong></td><td>Traspasa las modificaciones transaccionales operativas hacia el DW mediante captura CDC.</td><td>Continuo + Nocturno</td><td>Cambios en la BD operativa (CDC)</td></tr>
+                <tr><td><strong>Mejora del OCR</strong></td><td>Agrupa anomalías de lectura y fallos de campos semánticos para reentrenamiento de modelos.</td><td>Batch Semanal</td><td>Programación temporal (cada semana)</td></tr>
             </tbody>
         </table>
 
         <h3>5.1. Diagrama de Flujo del Pipeline de Reintegros</h3>
-        <p>Muestra paso a paso el ciclo de vida de un trámite desde que ingresa al sistema, evaluando la presencia de errores en la lectura del OCR y dividiendo el camino entre automatización directa y derivación a mesas de soporte manual.</p>
+        <p>Flujo de actividades de negocio segmentado por responsabilidades funcionales. La partición de soporte manual detalla el desborde no lineal del pipeline principal alineado con la identidad cromática de la infraestructura.</p>
         <div class="diagram-box">
             <div class="diagram-container">
                 <div class="mermaid">
-                    flowchart TD
-                        A["<b>Carga del evento</b><br>Portal o empleado"]
-                        B["<b>Bus de eventos</b><br>Publica documento.recibido"]
-                        C["<b>OCR procesa documento</b><br>Lee texto y arma JSON"]
-                        D["<b>DB operativa:datos crudos</b><br>Incluye campos vacíos"]
-                        E{"<b>¿Quedaron campos vacíos?</b><br>Punto de decisión"}
-                        F["<b>Caso completo</b><br>Pasa directo a validación"]
-                        G["<b>Cola de revisión manual</b><br>Se avisa al operador"]
-                        H["<b>Operador actualiza la DB</b><br>Completa campos faltantes"]
-                        I["<b>Validación automática</b><br>Montos, saldo, plazos"]
-                        J["<b>Revisor aprueba o rechaza</b><br>Decisión humana final"]
-                        K["<b>Evento aprobado y pagado</b><br>Reintegro al asegurado"]
+                    graph TD
+                        %% Definición de Carriles UML mediante Subgrafos Estrictos
+                        subgraph Asegurado_O_Empleado [Canal de Ingesta]
+                            Start([● START]) --> Carga[Cargar Documentos]
+                        end
 
-                        A --> B --> C --> D --> E
-                        E -- No --> F
-                        E -- Sí --> G
-                        G --> H --> I
-                        F --> I
-                        I --> J --> K
+                        subgraph Capa_Mensajeria [Bus de Eventos]
+                            Carga --> Publicar[Publicar Evento]
+                            Publicar --> Dispatch{Despacho Asíncrono}
+                        end
 
-                        style E fill:#1a233a,stroke:#ffb703,color:#fff
-                        style G fill:#24121a,stroke:#ff4d6d,color:#fff
-                        style H fill:#24121a,stroke:#ff4d6d,color:#fff
-                        style F fill:#0f241d,stroke:#00f5d4,color:#fff
-                        style K fill:#0f241d,stroke:#00f5d4,color:#fff
-                        style A fill:#101726,stroke:#1e2942,color:#fff
-                        style B fill:#101726,stroke:#1e2942,color:#fff
-                        style C fill:#101726,stroke:#1e2942,color:#fff
-                        style D fill:#101726,stroke:#1e2942,color:#fff
-                        style I fill:#101726,stroke:#1e2942,color:#fff
-                        style J fill:#101726,stroke:#1e2942,color:#fff
+                        subgraph Sistema_Automatizado [Pipeline Rápido - Cómputo]
+                            Dispatch -->|Doc Válido| OCR[Procesar OCR]
+                            OCR --> Validar[Ejecutar Reglas de Negocio]
+                        end
+
+                        subgraph Mesa_Soporte [Camino Lento - Latencia Humana]
+                            Dispatch -->|Fallo / Ilegible| DLQ[Encolar en DLQ]
+                            DLQ --> Revision[Corrección por Operador]
+                        end
+
+                        %% Conexiones Inter-carril
+                        Revision -->|Reinyectar| Validar
+                        Validar --> Auditoria{¿Requiere Auditoría Médica?}
+                        Auditoria -->|Sí| Fin[Aprobar Liquidación]
+                        Auditoria -->|No| Fin
+                        Fin --> End((🖲 END))
+
+                        %% Estilos de Diseño de Subgrafos (Idénticos a la imagen de infraestructura)
+                        style Asegurado_O_Empleado fill:#0f1524,stroke:#00e5ff,stroke-width:1px,color:#fff
+                        style Capa_Mensajeria fill:#1a233a,stroke:#ffb703,stroke-width:1px,color:#fff
+                        style Sistema_Automatizado fill:#0d111c,stroke:#3949AB,stroke-width:1px,color:#fff
+                        style Mesa_Soporte fill:#1a1026,stroke:#9333ea,stroke-width:1px,color:#fff
+
+                        %% Estilos de Nodos Internos para simular los bloques de la imagen
+                        style Start fill:#101726,stroke:#00e5ff,color:#fff
+                        style Carga fill:#101726,stroke:#00e5ff,color:#fff
+                        style Publicar fill:#1a233a,stroke:#ffb703,color:#fff
+                        style Dispatch fill:#1a233a,stroke:#ffb703,color:#fff
+                        style OCR fill:#101726,stroke:#00f5d4,color:#fff
+                        style Validar fill:#101726,stroke:#00f5d4,color:#fff
+                        style DLQ fill:#1a1026,stroke:#9333ea,color:#fff
+                        style Revision fill:#1a1026,stroke:#9333ea,color:#fff
+                        style Auditoria fill:#101726,stroke:#00f5d4,color:#fff
+                        style Fin fill:#101726,stroke:#00f5d4,color:#fff
+                        style End fill:#0a0f1e,stroke:#00f5d4,stroke-width:2px,color:#fff
+                </div>
+            </div>
+        </div>
+
+        <h3>5.2. Diagrama de Tiempos (Comparativo de Duración)</h3>
+        <p>Representa las duraciones relativas de las distintas etapas, destacando que la intervención manual es el factor crítico que alarga el tiempo total. El procesamiento asíncrono permite que múltiples documentos avancen en paralelo, pero cada uno tiene su propia línea de tiempo.</p>
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    timeline
+                        title Duración Típica de Etapas (escala logarítmica)
+                        OCR : 0 - 5 (segundos a minutos)
+                        Validación automática : 5 - 7 (milisegundos)
+                        Revisión manual (si aplica) : 7 - 25 (horas a días)
+                        Aprobación humana : 25 - 40 (horas a días)
+                        Reportes nocturnos : 40 - 45 (procesamiento batch)
+                </div>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem;">* Los tiempos son orientativos y varían según la carga y complejidad del documento.</p>
+        </div>
+
+        <h3>5.3. Diagrama de Casos de Uso (Puntos de Inicio)</h3>
+        <p>Identifica los actores y los casos de uso que disparan cada pipeline, mostrando claramente los puntos de inicio.</p>
+        <div class="diagram-box">
+            <div class="diagram-container">
+                <div class="mermaid">
+                    flowchart LR
+                        subgraph Actores
+                            User[Usuario<br>Asegurado/Empleado]
+                            System[Sistema]
+                            Timer[Temporizador]
+                        end
+                        subgraph Casos
+                            Carga[Carga de documentos]
+                            Ingesta[Ingesta de evento]
+                            Mensaje[Mensaje en el bus]
+                            OCR[OCR]
+                            Validacion[Validación automática]
+                            Revision[Revisión manual]
+                            Notificaciones[Notificaciones]
+                            Cambio[Cambio en BD]
+                            Copia[Copia a Data Warehouse]
+                            Programacion[Programación semanal]
+                            Mejora[Mejora del OCR]
+                        end
+
+                        User --> Carga
+                        Carga --> Ingesta
+                        System --> Mensaje
+                        Mensaje --> OCR
+                        Mensaje --> Validacion
+                        Mensaje --> Revision
+                        Mensaje --> Notificaciones
+                        System --> Cambio
+                        Cambio --> Copia
+                        Timer --> Programacion
+                        Programacion --> Mejora
+
+                        style Actores fill:#0f1524,stroke:#00e5ff,color:#fff
+                        style Casos fill:#1a233a,stroke:#ffb703,color:#fff
+                        style User fill:#101726,stroke:#00e5ff,color:#fff
+                        style System fill:#101726,stroke:#00e5ff,color:#fff
+                        style Timer fill:#101726,stroke:#00e5ff,color:#fff
+                        style Carga fill:#101726,stroke:#00e5ff,color:#fff
+                        style Ingesta fill:#101726,stroke:#00e5ff,color:#fff
+                        style Mensaje fill:#101726,stroke:#00e5ff,color:#fff
+                        style OCR fill:#101726,stroke:#00e5ff,color:#fff
+                        style Validacion fill:#101726,stroke:#00e5ff,color:#fff
+                        style Revision fill:#101726,stroke:#00e5ff,color:#fff
+                        style Notificaciones fill:#101726,stroke:#00e5ff,color:#fff
+                        style Cambio fill:#101726,stroke:#00e5ff,color:#fff
+                        style Copia fill:#101726,stroke:#00e5ff,color:#fff
+                        style Programacion fill:#101726,stroke:#00e5ff,color:#fff
+                        style Mejora fill:#101726,stroke:#00e5ff,color:#fff
                 </div>
             </div>
         </div>
@@ -610,55 +707,61 @@
         <li><strong>Informe de rechazados e incompletos:</strong> Se entrega como informe diario para que los ejecutivos comerciales contacten a los clientes.</li>
     </ul>
         <h3>6.3. Diagrama de Pipeline de Reportes y Alertas</h3>
-        <p>Estructura la separación de flujos de datos analíticos. Las necesidades inmediatas consumen directo del bus de mensajería (Tiempo Real), mientras que los reportes gerenciales agregados consultan el Data Warehouse aislado (Batch) sin afectar la transacción operativa.</p>
-        
+        <p>Separación de flujos analíticos y operacionales de datos. El camino crítico de streaming atiende necesidades de tiempo real, mientras que las consultas analíticas pesadas se confinan al bloque Batch.</p>
+
         <div class="diagram-box">
             <div class="diagram-container">
                 <div class="mermaid">
-                    flowchart TD
-                        Bus["<b>Bus de Eventos</b><br>Origen de todos los datos"]
-                        Vistas["<b>Vistas Materializadas TR</b><br>Se actualizan al instante"]
-                        DB_Op["<b>DB Operativa SQL</b><br>Fuente de verdad del negocio"]
-                        CDC["<span style='color:#000000;font-weight:bold;'>CDC</span>"] 
-                        DW["<b>Data Warehouse</b><br>Redshift / BigQuery / Synapse"]
-                        
-                        RT1["<b>Eventos listos para pago</b><br>Consumido por: Finanzas (al instante)"]
-                        RT2["<b>Alerta saldo bajo USD 2000</b><br>Consumido por: Ejecutivos comerciales"]
-                        RT3["<b>Notificaciones al asegurado</b><br>Consumido por: Asegurado (email / SMS)"]
-                        
-                        B1["<b>Informe matutino</b><br>Consumido por: Finanzas (nocturno)"]
-                        B2["<b>Cierre del día</b><br>Consumido por: Operaciones (EOD)"]
-                        B3["<b>Rechazados e incompletos</b><br>Consumido por: Ejecutivos (diario)"]
-                        B4["<b>Fallos del OCR</b><br>Consumido por: Desarrollo (semanal)"]
+                    graph LR
+                        %% Nodos de Entrada UML
+                        ST_TR([⚡ INICIO: Stream]) --> Bus[Bus Eventos]
+                        ST_BT([⏰ INICIO: Programado]) --> CDC[Captura CDC]
 
-                        Bus --> Vistas
-                        Bus --> DB_Op
-                        DB_Op --> CDC --> DW
-                        
-                        Vistas --> RT1
-                        RT1 --> RT2
-                        RT2 --> RT3
-                        
-                        DW --> B1
-                        B1 --> B2
-                        B2 --> B3
-                        B3 --> B4
-                        
+                        %% Ramal Tiempo Real
+                        subgraph Streaming_RealTime [Canal de Mensajería Inmediata]
+                            Bus --> Vistas[Vistas Materializadas]
+                            Vistas --> R1[Pagos Finanzas]
+                            Vistas --> R2[Alertas de Saldo]
+                            Vistas --> R3[Notificaciones Alertas]
+                        end
+
+                        %% Puentes de Persistencia
+                        Bus --> DB[(DB Operativa)]
+                        DB --> CDC
+
+                        %% Ramal Lotes
+                        subgraph Batch_Processing [Canal de Carga Diferida]
+                            CDC --> DW[(Data Warehouse)]
+                            DW --> B1[Informe Matutino]
+                            DW --> B2[Cierre EOD]
+                            DW --> B3[Métricas SLA]
+                        end
+
+                        %% Estilos de Subgrafos (Alineados con la imagen de infraestructura)
+                        style Streaming_RealTime fill:#1a233a,stroke:#ffb703,stroke-width:1px,color:#fff
+                        style Batch_Processing fill:#0d111c,stroke:#3949AB,stroke-width:1px,color:#fff
+
+                        %% Estilos de Nodos de Entrada y Componentes Core
+                        style ST_TR fill:#101726,stroke:#00e5ff,color:#fff
+                        style ST_BT fill:#101726,stroke:#3949AB,color:#fff
                         style Bus fill:#1a233a,stroke:#ffb703,color:#fff
-                        style DB_Op fill:#0d111c,stroke:#3949AB,color:#fff
+                        style DB fill:#0d111c,stroke:#3949AB,color:#fff
+                        style CDC fill:#101726,stroke:#3949AB,color:#fff
+
+                        %% Estilos del Flujo de Streaming (Alertas rápidas)
+                        style Vistas fill:#101726,stroke:#ffb703,color:#fff
+                        style R1 fill:#101726,stroke:#00e5ff,color:#fff
+                        style R2 fill:#101726,stroke:#00e5ff,color:#fff
+                        style R3 fill:#101726,stroke:#00e5ff,color:#fff
+
+                        %% Estilos del Flujo Batch (Reportes pesados / DW)
                         style DW fill:#0d111c,stroke:#3949AB,color:#fff
-                        style Vistas fill:#101726,stroke:#00f5d4,color:#fff
-                        style RT1 fill:#0f241d,stroke:#00f5d4,color:#fff
-                        style RT2 fill:#0f241d,stroke:#00f5d4,color:#fff
-                        style RT3 fill:#0f241d,stroke:#00f5d4,color:#fff
-                        style B1 fill:#101726,stroke:#1e2942,color:#fff
-                        style B2 fill:#101726,stroke:#1e2942,color:#fff
-                        style B3 fill:#101726,stroke:#1e2942,color:#fff
-                        style B4 fill:#101726,stroke:#1e2942,color:#fff
+                        style B1 fill:#101726,stroke:#00f5d4,color:#fff
+                        style B2 fill:#101726,stroke:#00f5d4,color:#fff
+                        style B3 fill:#101726,stroke:#00f5d4,color:#fff
                 </div>
             </div>
         </div>
-    </div>
 
     <div class="card">
         <h2>7. Puntos no Cubiertos en la Situación Actual</h2>
@@ -681,9 +784,8 @@
         </table>
     </div>
 
-    <!-- 8. CONCLUSIÓN PRINCIPAL -->
     <div class="card">
-        <h2>8. Conclusión de la Arquitectura Técnica</h2>
+        <h2>8. Conclusión de la Arquitectura Técnico</h2>
         <p>La transformación hacia una arquitectura basada en eventos resuelve los problemas de rigidez, picos estacionales y falta de visibilidad. Se mantiene la inversión en OCR y base SQL, pero se incorporan componentes ausentes: Data Warehouse, validación automática, notificaciones, trazabilidad y monitoreo proactivo del SLA. El resultado es un sistema <strong>escalable, resiliente y preparado para cumplir el plazo de 15 días en el 99% de los casos</strong>, con una reducción de costos operativos del 68%.</p>
     </div>
 
@@ -710,7 +812,7 @@
 
     <div class="card">
         <h2>ANEXO II - Análisis de Costos </h2>
-        <p>Supuestos utilizados:</strong> Volumen: 5.000 eventos/día, picos de 15.000/día. Documentos por evento: promedio 3. Almacenamiento: aprox. 3 GB/mes, en 3 años ≈ 100 GB. Proveedor cloud: AWS us-east-1 como referencia. CAPEX incluye diseño, desarrollo, infraestructura inicial, capacitación, implementación. OPEX mensual estimado para régimen normal.</p>
+        <p>Supuestos utilizados: Volumen: 5.000 eventos/día, picos de 15.000/día. Documentos por evento: promedio 3. Almacenamiento: aprox. 3 GB/mes, en 3 años ≈ 100 GB. Proveedor cloud: AWS us-east-1 como referencia. CAPEX incluye diseño, desarrollo, infraestructura inicial, capacitación, implementación. OPEX mensual estimado para régimen normal.</p>
         
         <h3>A. CAPEX - Inversión Inicial </h3>
         <table>
@@ -821,11 +923,13 @@
     </div>
 
     <div class="card">
-        <h2> Métricas de Mejora (Impacto Proyectado de Solución)</h2>
+        <h2>Métricas de Mejora (Impacto Proyectado de Solución)</h2>
         <p>El siguiente gráfico ilustra el salto de calidad operativo derivado de la migración tecnológica:</p>
-        <div style="margin: 2rem 0;">
-            <canvas id="metricsChart" width="900" height="400"></canvas>
+        
+        <div style="margin: 2rem 0; height: 410px; position: relative;">
+            <canvas id="metricsChart"></canvas>
         </div>
+        
         <div class="grid-3">
             <div class="stat-card">
                 <span>Tiempo de Procesamiento</span><br>
@@ -844,7 +948,7 @@
 
     <div class="card">
         <h2>Conclusión del Anexo</h2>
-         <p>La estrategia integral propuesta para MCare resulta viable técnica, legal y económicamente. Los riesgos normativos de la legislación argentina se neutralizan mediante capas inmutables de trazabilidad, firma digital y consentimientos explícitos. Los montos de inversión se amortizan en el primer año operativo, mientras que la planificación metodológica Scrum mitiga desviaciones mediante hitos incrementales continuos.</p>
+        <p>La estrategia integral propuesta para MCare resulta viable técnica, legal y económicamente. Los riesgos normativos de la legislación argentina se neutralizan mediante capas inmutables de trazabilidad, firma digital y consentimientos explícitos. Los montos de inversión se amortizan en el primer año operativo, mientras que la planificación metodológica Scrum mitiga desviaciones mediante hitos incrementales continuos.</p>
     </div>
 
     <footer>
@@ -856,7 +960,6 @@
 <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
 
 <script>
-    // Inicialización de diagramas Mermaid con paleta ciberpunk oscura integrada
     mermaid.initialize({
         startOnLoad: true,
         theme: 'base',
@@ -868,11 +971,9 @@
             'secondaryColor': '#141b2b',
             'nodeBorder': '#2a3650',
             'nodeTextColor': '#f0f4fc'
-        },
-        flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 50, rankSpacing: 60, curve: 'basis' }
+        }
     });
 
-    // Gráfico de Métricas Comparativas - Chart.js
     function initChart() {
         const ctx = document.getElementById('metricsChart').getContext('2d');
         new Chart(ctx, {
@@ -897,18 +998,6 @@
             }
         });
     }
-
-    // Comportamiento de los desplegables de las explicaciones de diagramas
-    document.querySelectorAll('.explain-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('data-target');
-            const explainDiv = document.getElementById(targetId);
-            if (explainDiv) {
-                explainDiv.style.display = (explainDiv.style.display === 'none' || explainDiv.style.display === '') ? 'block' : 'none';
-            }
-        });
-    });
 
     window.addEventListener('load', () => {
         initChart();
